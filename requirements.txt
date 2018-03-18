@@ -1,0 +1,18 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar 16 15:44:33 2018
+
+@author: Riko
+"""
+
+#Requirements.txt
+
+#Contains any additional Python distributions, 
+#beyond Mesa itself, required to run the model.
+
+mesa 
+numpy 
+matplotlib
+bokeh 
+
+
