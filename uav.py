@@ -14,9 +14,9 @@ class Uav(Agent):
     '''
     A UAV agent.
     The agent has three states:
-        - OnRoute: flying from source to destination 
-        - ReFuel: after landing, the turnaround time minimum, as if refueling
-        - Idle: UAV is ready to transport but hasn't been issued a mission thus it is idle.
+        - ONROUTE: flying from source to destination 
+        - REFUEL: after landing, the turnaround time minimum, as if refueling
+        - IDLE: UAV is ready to transport but hasn't been issued a mission thus it is idle.
    
     The UAV has the following attributes:
         UUID: static, the UAV unique idnetified (like tail number)
@@ -57,7 +57,7 @@ class Uav(Agent):
         self.fuel = self.FUEL_CAPACITY #instantiated with full tank of gas 
         self.odometer = 0
         self.num_landings = 0 
-        self.STATE = 'Idle'
+        self.STATE = 'IDLE'
 
     def cohere(self, neighbors):
         '''
@@ -104,6 +104,7 @@ class Uav(Agent):
         UAV loops through source queues and selects a set of packages to load 
         it will be succesful if there are more than MIN_PAYLOAD packages for one destination 
         UAV will take the oldest packages , up to MAX_PAYLOAD to destination 
+        
         #TODO: figure out package prioritization (what is older queue??)
         
         '''
@@ -113,6 +114,7 @@ class Uav(Agent):
         Get the UAV's state, compute the next action 
         '''
         if self.STATE == 'OnRoute':
+            #If uav is onroute to its destination, continue until reached
             destination_pose = self.model.airports.loc[self.destination_name].values
             #Distance to destination
             travel_to_go = self.model.space.get_distance(self.position, destination_pose )
@@ -121,6 +123,8 @@ class Uav(Agent):
             travel_dist = np.linalg.norm(travel_dist_vect)
             # if the distance left to reach destination is less than what the UAV 
             #will cover in this step, it has reached the destination
+            
+            #TODO: Make this section more elegant 
             if travel_to_go < travel_dist:
                 #Reached destination! 
                 new_position = destination_pose
