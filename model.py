@@ -90,7 +90,8 @@ class Fleet(Model):
             
             self.space.place_agent(boid, pos)
             self.schedule.add(boid)
-
+        
+        #TODO have a type designation in agents 
         for i in model.airports.shape[0]
             airport = Airport(i, self, ...)
 

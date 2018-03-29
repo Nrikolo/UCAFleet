@@ -22,9 +22,10 @@ class Uav(Agent):
         UUID: static, the UAV unique idnetified (like tail number)
         MAX_PAYLOAD (400kg): static, maximal amount of payload the UAV can carry
         MIN_PAYLOAD (200kg): static, the minimal amount of payload for it to take off
-        SPEED (278kph): static, UAV speed (velocity magnitude)
-        MAX_RANGE (2300km): static, the maximum distance (source->desitnation) the UAV can fly
-        FUEL_CAPACITY (302L): static, the maximum colume of fuel the UAV can hold 
+        SPEED (278kph): static, UAV speed (velocity magnitude) , 150kts
+        MAX_RANGE (2100km): static, the maximum distance (source->desitnation) the UAV can fly (7.4 hours max)
+        FUEL_CAPACITY (300L): static, the maximum colume of fuel the UAV can hold 
+        FUEL_CONSUMPTION (38L/hr): static, the nominal fuel consumption rate at 60% power, 10kft, 150kts
         payload (int): The loaded payload on the UAV
         source (airport NAME, str): The UAV flight source
         destination (airport NAME, str): The UAV flight desitnation 
@@ -39,7 +40,7 @@ class Uav(Agent):
     MIN_PAYLOAD   = 200 #kg
     SPEED         = 278 #kph
     MAX_RANGE     = 2300 #km
-    FUEL_CAPACITY = 302 #Liters
+    FUEL_CAPACITY = 300 #Liters
         
     def __init__(self, unique_id, model, airport_name):
         '''
@@ -59,10 +60,111 @@ class Uav(Agent):
         self.num_landings = 0 
         self.STATE = 'IDLE'
 
+    
+    def finished_refueling(self): 
+        #Ensure no overflow of fuel
+        self.fuel = self.FUEL_CAPACITY
+        #UAV is now waiting to be loaded, state change to IDLE
+        self.STATE = 'IDLE'
+        
+    def finished_loading(self): 
+        self.STATE = 'ONRAOUTE'
+    
+    def try_loading(self): 
+        '''
+        UAV loops through source queues and selects a set of packages to load 
+        it will be succesful if there are more than MIN_PAYLOAD packages for one destination 
+        UAV will take the oldest packages , up to MAX_PAYLOAD to destination 
+        
+        returns true if loading was succesful and false otherwise 
+        
+        #TODO: figure out package prioritization (what is older queue??)
+        '''
+        #for q in (self.SOURCE airport package queues)
+            #
+        #Check payload>MIN_PAYLOAD -> assign destination and switch to OnRoute
+        
+    
+    def step(self):
+        '''
+        Get the UAV's state, compute the next action 
+        '''
+        if self.STATE == 'OnRoute':
+            #If uav is onroute to its destination, continue until reached
+            
+            ##TODO: can be done more efficiently if destination pose is stored? 
+            destination_pose = self.model.airports.loc[self.destination_name].values
+            #Distance to destination
+            distance_to_destination = self.model.space.get_distance(self.position, destination_pose )
+            #TODO: might make sense to have this as an attribute since its not changing 
+            distance_per_step = self.SPEED/(self.model.steps_per_hour)
+            
+            #If the distance left to reach destination is less than what the UAV 
+            #will cover in this step, it has reached the destination
+            
+            #TODO: Make this section more elegant 
+            if distance_to_destination > distance_per_step :
+                #Haven't reached the destination, keep going...
+                
+                #The translation vector             
+                error_vector = self.model.space.get_heading(self.position, destination_pose )
+                #Heading vector is obtained by normalizing (unit vector)
+                heading_vector = error_vector/ distance_to_destination     
+                #Compute the new position by adding the translation vector to the old position
+                new_position = self.position + distance_per_step * heading_vector
+                #Add the distance traveled to the odometry
+                self.odometer += distance_per_step
+                self.fuel -= 10.0 
+            else:
+                #Reached destination! 
+                
+                self.fuel = 0.0 
+                #set new position to be the destination
+                new_position = destination_pose
+                #add actual distance to odometer
+                self.odometer += distance_to_destination
+            
+            #TODO: decrement fuel 
+            
+            #Move the agent to the new position
+            self.model.space.move_agent(self, new_position)
+            
+
+        if self.STATE == 'REFUEL':
+            #If uav is refueling, continue until full
+            
+            if self.fuel < self.FUEL_CAPACITY:
+                #TODO: get the REFUELING_SPEED from the current airport (self.SOURCE) the UAV is in
+                #self.fuel += self.model.airports.loc[self.SOURCE].values
+                self.fuel += 30
+            else:
+                self.finished_refueling()
+                
+        if self.STATE == 'IDLE' and self.try_loading(): 
+            #Assumes that loading takes 1 step
+            #TODO: consider adding a "LOADING" State for UAV if it is to take more than one step
+            self.finished_loading()
+                
+               
+        #If Idle
+        
+        neighbors = self.model.space.get_neighbors(self.pos, self.vision, False)
+        self.velocity += (self.cohere(neighbors) * self.cohere_factor +
+                          self.separate(neighbors) * self.separate_factor +
+                          self.match_heading(neighbors) * self.match_factor) / 2
+        self.velocity /= np.linalg.norm(self.velocity)
+        new_pos = self.pos + self.velocity * self.speed
+        self.model.space.move_agent(self, new_pos)
+        
+# =============================================================================
+# Reference functions from example code        
+# =============================================================================
+        
     def cohere(self, neighbors):
         '''
         Return the vector toward the center of mass of the local neighbors.
         '''
+        
         cohere = np.zeros(2)
         if neighbors:
             for neighbor in neighbors:
@@ -92,69 +194,3 @@ class Uav(Agent):
                 match_vector += neighbor.velocity
             match_vector /= len(neighbors)
         return match_vector
-
-    def finished_refueling(self): 
-        self.STATE = 'Idle'
-        
-    def finished_loading(self): 
-        self.STATE = 'OnRoute'
-    
-    def try_loading(self): 
-        '''
-        UAV loops through source queues and selects a set of packages to load 
-        it will be succesful if there are more than MIN_PAYLOAD packages for one destination 
-        UAV will take the oldest packages , up to MAX_PAYLOAD to destination 
-        
-        #TODO: figure out package prioritization (what is older queue??)
-        
-        '''
-    
-    def step(self):
-        '''
-        Get the UAV's state, compute the next action 
-        '''
-        if self.STATE == 'OnRoute':
-            #If uav is onroute to its destination, continue until reached
-            destination_pose = self.model.airports.loc[self.destination_name].values
-            #Distance to destination
-            travel_to_go = self.model.space.get_distance(self.position, destination_pose )
-            #The translation vector 
-            travel_dist_vect = self.SPEED/(self.model.steps_per_hour) * self.model.space.get_heading(self.position, destination_pose )
-            travel_dist = np.linalg.norm(travel_dist_vect)
-            # if the distance left to reach destination is less than what the UAV 
-            #will cover in this step, it has reached the destination
-            
-            #TODO: Make this section more elegant 
-            if travel_to_go < travel_dist:
-                #Reached destination! 
-                new_position = destination_pose
-                self.odometer += travel_to_go
-            else:
-                #Compute the new position by adding the translation vector to the old position
-                new_position = self.position + travel_dist_vect
-                #Add the distance traveled to the odometry
-                self.odometer += travel_dist 
-            
-            #Move the agent to the new position
-            self.model.space.move_agent(self, new_position )
-
-        if self.STATE == 'ReFuel':
-            if self.fuel < self.FUEL_CAPACITY:
-                self.fuel += 100
-            else:
-                self.finished_refueling()
-        if self.STATE == 'Idle' and self.try_loading(): 
-            self.finished_loading()
-                
-                
-
-                
-        #If Idle
-            #Check payload>MIN_PAYLOAD -> assign destination and switch to OnRoute
-        neighbors = self.model.space.get_neighbors(self.pos, self.vision, False)
-        self.velocity += (self.cohere(neighbors) * self.cohere_factor +
-                          self.separate(neighbors) * self.separate_factor +
-                          self.match_heading(neighbors) * self.match_factor) / 2
-        self.velocity /= np.linalg.norm(self.velocity)
-        new_pos = self.pos + self.velocity * self.speed
-        self.model.space.move_agent(self, new_pos)
