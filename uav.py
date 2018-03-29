@@ -16,17 +16,23 @@ class Uav(Agent):
     The agent has three states:
         - ONROUTE: flying from source to destination 
         - REFUEL: after landing, the turnaround time minimum, as if refueling
-        - IDLE: UAV is ready to transport but hasn't been issued a mission thus it is idle.
+        - IDLE: UAV is ready to transport but hasn't been issued a mission thus
+            it is idle.
    
     The UAV has the following attributes:
         UUID: static, the UAV unique idnetified (like tail number)
         MAX_PAYLOAD (400kg): static, maximal amount of payload the UAV can carry
-        MIN_PAYLOAD (200kg): static, the minimal amount of payload for it to take off
+        MIN_PAYLOAD (200kg): static, the minimal amount of payload for it to 
+            take off
         SPEED (278kph): static, UAV speed (velocity magnitude) , 150kts
-        MAX_RANGE (2100km): static, the maximum distance (source->desitnation) the UAV can fly (7.4 hours max)
+        MAX_RANGE (2100km): static, the maximum distance (source->desitnation)
+            the UAV can fly (7.4 hours max)
         FUEL_CAPACITY (300L): static, the maximum colume of fuel the UAV can hold 
-        FUEL_CONSUMPTION (38L/hr): static, the nominal fuel consumption rate at 60% power, 10kft, 150kts
-        payload (int): The loaded payload on the UAV
+        FUEL_CONSUMPTION (38L/hr): static, the nominal fuel consumption rate at
+            60% power, 10kft, 150kts
+        payload (int): The loaded payload on the UAV, basically the total weight
+            of packages 
+        packages (queue): the packages on board the UAV 
         source (airport NAME, str): The UAV flight source
         destination (airport NAME, str): The UAV flight desitnation 
         position: UAV current position in x,y coordinates in km  
@@ -41,6 +47,7 @@ class Uav(Agent):
     SPEED         = 278 #kph
     MAX_RANGE     = 2300 #km
     FUEL_CAPACITY = 300 #Liters
+    FUEL_CONSUMPTION = 38 #Liters/hr
         
     def __init__(self, unique_id, model, airport_name):
         '''
@@ -52,7 +59,9 @@ class Uav(Agent):
         '''
         super().__init__(unique_id, model)
         self.source_name = airport_name
-        self.position = model.airports.loc[self.source_name].values
+        ##TODO: fix this, model doesn't have airports as attribute
+        self.pos = model.airports.loc[self.source_name].values
+        self.packages = list()
         self.payload = 0
         self.destination_name = None
         self.fuel = self.FUEL_CAPACITY #instantiated with full tank of gas 
@@ -69,22 +78,32 @@ class Uav(Agent):
         
     def finished_loading(self): 
         self.STATE = 'ONRAOUTE'
-    
+        
+    def unload(self): 
+
+        #move them to "aggragator"
+        self.model.package_aggregator += self.packages
+        #unload packages by clearing the list        
+        self.packages[:] = []
+        
+        
+    def reached_destination(self):
+        #UAV has landed
+        #UAV is unloaded at destination
+        self.unload()
+        #change state to refueling 
+        self.STATE = 'REFUELING'
+        
     def try_loading(self): 
         '''
-        UAV loops through source queues and selects a set of packages to load 
-        it will be succesful if there are more than MIN_PAYLOAD packages for one destination 
-        UAV will take the oldest packages , up to MAX_PAYLOAD to destination 
-        
         returns true if loading was succesful and false otherwise 
-        
-        #TODO: figure out package prioritization (what is older queue??)
         '''
-        #for q in (self.SOURCE airport package queues)
-            #
-        #Check payload>MIN_PAYLOAD -> assign destination and switch to OnRoute
         
-    
+        #TODO: implement as a public method of the airport the uav is in
+        self.packages = list(self.model.airports.loc[self.source_name].load_uav(self))
+        return self.packages
+        
+
     def step(self):
         '''
         Get the UAV's state, compute the next action 
@@ -95,9 +114,10 @@ class Uav(Agent):
             ##TODO: can be done more efficiently if destination pose is stored? 
             destination_pose = self.model.airports.loc[self.destination_name].values
             #Distance to destination
-            distance_to_destination = self.model.space.get_distance(self.position, destination_pose )
+            distance_to_destination = self.model.space.get_distance(self.pos,
+                                                                    destination_pose )
             #TODO: might make sense to have this as an attribute since its not changing 
-            distance_per_step = self.SPEED/(self.model.steps_per_hour)
+            distance_per_step = self.SPEED/(self.model.getStepsPerHour())
             
             #If the distance left to reach destination is less than what the UAV 
             #will cover in this step, it has reached the destination
@@ -107,17 +127,22 @@ class Uav(Agent):
                 #Haven't reached the destination, keep going...
                 
                 #The translation vector             
-                error_vector = self.model.space.get_heading(self.position, destination_pose )
+                error_vector = self.model.space.get_heading(self.pos,
+                                                            destination_pose )
                 #Heading vector is obtained by normalizing (unit vector)
                 heading_vector = error_vector/ distance_to_destination     
-                #Compute the new position by adding the translation vector to the old position
-                new_position = self.position + distance_per_step * heading_vector
+                #Compute the new position by adding the translation vector to 
+                #the old position
+                new_position = self.pos + distance_per_step * heading_vector
                 #Add the distance traveled to the odometry
                 self.odometer += distance_per_step
-                self.fuel -= 10.0 
+                #Decrement the fuel available on UAV 
+                self.fuel -= self.FUEL_CONSUMPTION / (self.model.getStepsPerHour())
+                
             else:
                 #Reached destination! 
-                
+                #Force empty fuel 
+                #TODO: remove this force reset 
                 self.fuel = 0.0 
                 #set new position to be the destination
                 new_position = destination_pose
@@ -134,7 +159,8 @@ class Uav(Agent):
             #If uav is refueling, continue until full
             
             if self.fuel < self.FUEL_CAPACITY:
-                #TODO: get the REFUELING_SPEED from the current airport (self.SOURCE) the UAV is in
+                #TODO: get the REFUELING_SPEED from the current airport 
+                #(self.SOURCE) the UAV is in
                 #self.fuel += self.model.airports.loc[self.SOURCE].values
                 self.fuel += 30
             else:
@@ -142,7 +168,8 @@ class Uav(Agent):
                 
         if self.STATE == 'IDLE' and self.try_loading(): 
             #Assumes that loading takes 1 step
-            #TODO: consider adding a "LOADING" State for UAV if it is to take more than one step
+            #TODO: consider adding a "LOADING" State for UAV if it is to take 
+            #more than one step
             self.finished_loading()
                 
                

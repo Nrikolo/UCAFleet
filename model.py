@@ -62,38 +62,65 @@ class Fleet(Model):
         '''
         Create a new Fleet model.
         Args:
-            airports: a pandas DataFrame with airport name and location
+            airports: a pandas DataFrame with airport name and location {name, x, y, pdf_params ,refuelingSpeed}
             num_uavs: the total number of UAVs in model (distribution is sort of random uniform for now)
             
             width, height: Size of the space.
         '''
-        self.num_uavs = num_uavs
-        self.steps_per_hour = steps_per_hour
+        self._AIRPORTS = airports
+        self._NUM_UAVS = num_uavs
+        self._STEPS_PER_HOUR = steps_per_hour
      
         self.schedule = RandomActivation(self)
         self.space = ContinuousSpace(width, height, True)
-        
+        self.package_aggregator = list()
         self.make_agents()
         self.running = True
 
-    def make_agents(self):
+    def getStepsPerHour(self): 
+        return self._STEPS_PER_HOUR
+    
+    def make_airports(self):
         '''
-        Create self.population agents, with random positions and starting headings.
+        '''
+        
+        #for index, row in df.iterrows():
+        #    print row['c1'], row['c2']
+        #TODO have a type designation in agents 
+        for index,row in self._AIRPORTS.iterrows():
+            airport = Airport(i, self, ...)
+            
+        
+    def make_uavs(self):
+        '''
         '''
         for i in range(self.num_uavs):
             
             pos = np.array((x, y))
             velocity = np.random.random(2) * 2 - 1
-            boid = Uav(i, self, pos, self.speed, velocity, self.vision,
+            uav = Uav(i, self, pos, self.speed, velocity, self.vision,
                         self.separation, **self.factors)
-            
-            
-            self.space.place_agent(boid, pos)
+            self.space.place_agent(uav, pos)
             self.schedule.add(boid)
         
-        #TODO have a type designation in agents 
-        for i in model.airports.shape[0]
-            airport = Airport(i, self, ...)
-
+    def make_agents(self):
+        '''
+        Create self.population agents, with random positions and starting headings.
+        '''
+        self.make_airports()
+        self.make_uavs()
+        
+    
+    def getRandomDestinationAirport(self,source_name): 
+        '''
+        pulls a random airport from the available airports not including the source airport name
+        '''
+        
+        random_airport_name = random.choice(self.airports).NAME
+        while random_airport_name not source_name:
+            random_airport_name = random.choice(self.airports).NAME
+    
+        return random_airport_name 
+    
     def step(self):
         self.schedule.step()
