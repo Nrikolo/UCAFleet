@@ -20,11 +20,11 @@ class Airport(Agent):
         Package PDF (probability density function)
         UAV Queue (FIFO queue) of UAV agents in that airport
         POSITION (x,y) in km
-        REFUELING_SPEED in Liters/step 
+        REFUELING_RATE in Liters/step 
   
 
     '''
-    def __init__(self, unique_id, model, name, pos,refuelingSpeed , pdf):
+    def __init__(self, unique_id, model, name, pos,refuelingRate , pdf):
         '''
         Create a airport agent.
         Args:
@@ -34,7 +34,7 @@ class Airport(Agent):
         super().__init__(unique_id, model)
         self.NAME = name
         self.pos = np.array(pos)
-        self.REFUELING_SPEED = refuelingSpeed
+        self.REFUELING_RATE = refuelingRate
         self.PDF = pdf
         
     def load_uav(self,UAV):

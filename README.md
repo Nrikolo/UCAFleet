@@ -1,9 +1,3 @@
-"""
-Created on Fri Mar 16 15:45:27 2018
-
-@author: Riko
-"""
-
 #!Work in progress!
 
 #Large Unmanned Cargo Aircraft Delivery Fleet
@@ -11,11 +5,26 @@ Created on Fri Mar 16 15:45:27 2018
 ##Summary 
 
 Build upon the mesa package, this is an agent based model simulating a network/fleet 
-of UAVs carrying payloads from point A to B. Those payload are randomly generated 
-at each airport with random physical attributes as well as a destination. 
+of UAVs carrying packages from point A to B. Each of those points is an airport.
+Those packages are randomly generated at each airport with random physical attributes
+as well as a destination. 
 
 UAVs are tasked with transporting those payloads from their present location to 
 the destination. 
+
+The aim is to maximize UAV utilization while minimizing package life span. 
+
+##Characteristics 
+
+* The UAV is based on a Dominator XP from Aeronautics. A modified Diamond DA 42 to an RPAS.
+* The airport network is based on actual city distances in eastern Canada.  
+
+##Assumptions
+
+* There is no limit as to the number of UAV in a single airport
+* The model doesn't support "hub and spoke" routing. Meaning, a package source 
+and destination must be connected by a single flight segment. 
+* Each airport is connected to all the other airports (Will be changed in the future) 
 
 ## Files
 

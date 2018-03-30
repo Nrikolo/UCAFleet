@@ -8,6 +8,7 @@ Created on Fri Mar 16 21:33:13 2018
 import numpy as np
 
 from mesa import Agent
+from parcel import Parcel
 
 
 class Uav(Agent):
@@ -31,17 +32,16 @@ class Uav(Agent):
         FUEL_CONSUMPTION (38L/hr): static, the nominal fuel consumption rate at
             60% power, 10kft, 150kts
         payload (int): The loaded payload on the UAV, basically the total weight
-            of packages 
-        packages (queue): the packages on board the UAV 
+            of parcels 
+        parcels (queue): the parcels on board the UAV 
         source (airport NAME, str): The UAV flight source
         destination (airport NAME, str): The UAV flight desitnation 
         position: UAV current position in x,y coordinates in km  
         fuel: The amount of liters of fuel the UAV has 
         odometer: The total distance the UAV has traveled 
         num_landings: The number of landings the UAv has conducted
-
-
     '''
+    
     MAX_PAYLOAD   = 400 #kg
     MIN_PAYLOAD   = 200 #kg
     SPEED         = 278 #kph
@@ -61,7 +61,7 @@ class Uav(Agent):
         self.source_name = airport_name
         ##TODO: fix this, model doesn't have airports as attribute
         self.pos = model.airports.loc[self.source_name].values
-        self.packages = list()
+        self.parcels = list()
         self.payload = 0
         self.destination_name = None
         self.fuel = self.FUEL_CAPACITY #instantiated with full tank of gas 
@@ -79,15 +79,30 @@ class Uav(Agent):
     def finished_loading(self): 
         self.STATE = 'ONRAOUTE'
         
-    def unload(self): 
+    def update_payload(self): 
+        '''
+        updates uav payload [kg] based on the current parcels loaded
+        '''
+        self.payload = np.sum(Parcel.WEIGHT for Parcel in self.parcels )
+        
 
-        #move them to "aggragator"
-        self.model.package_aggregator += self.packages
-        #unload packages by clearing the list        
-        self.packages[:] = []
+        
+    def unload(self): 
+        '''
+        unloads uav parcels into a model level aggregator (for later introspection)
+        and clears the payload 
+        '''
+        #move them to model "aggragator"
+        self.model.parcel_aggregator += self.parcels
+        #unload parcels by clearing the list of parcels on the uav      
+        self.parcels[:] = []
         
         
     def reached_destination(self):
+        '''
+        uav has reached its destination, function unloads UAV and changes its 
+        state to refueling
+        '''
         #UAV has landed
         #UAV is unloaded at destination
         self.unload()
@@ -100,8 +115,8 @@ class Uav(Agent):
         '''
         
         #TODO: implement as a public method of the airport the uav is in
-        self.packages = list(self.model.airports.loc[self.source_name].load_uav(self))
-        return self.packages
+        self.parcels = list(self.model.airports.loc[self.source_name].load_uav(self))
+        return self.parcels
         
 
     def step(self):
@@ -138,18 +153,12 @@ class Uav(Agent):
                 self.odometer += distance_per_step
                 #Decrement the fuel available on UAV 
                 self.fuel -= self.FUEL_CONSUMPTION / (self.model.getStepsPerHour())
-                
             else:
                 #Reached destination! 
-                #Force empty fuel 
-                #TODO: remove this force reset 
-                self.fuel = 0.0 
                 #set new position to be the destination
                 new_position = destination_pose
                 #add actual distance to odometer
                 self.odometer += distance_to_destination
-            
-            #TODO: decrement fuel 
             
             #Move the agent to the new position
             self.model.space.move_agent(self, new_position)
@@ -161,7 +170,7 @@ class Uav(Agent):
             if self.fuel < self.FUEL_CAPACITY:
                 #TODO: get the REFUELING_SPEED from the current airport 
                 #(self.SOURCE) the UAV is in
-                #self.fuel += self.model.airports.loc[self.SOURCE].values
+                #self.fuel += self.model.airports.loc[self.SOURCE].values.REFUELING_SPEED
                 self.fuel += 30
             else:
                 self.finished_refueling()

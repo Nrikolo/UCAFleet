@@ -8,27 +8,27 @@ Created on Fri Mar 16 21:52:14 2018
 import numpy as np
 
 
-class Package():
+class Parcel():
     '''
-    A Package class.
+    A Parcel class.
     The agent has the following attributes:
-        UUID (int) a unique identifier for this package  
+        UUID (int) a unique identifier for this parcel  
         WEIGHT (int) kg
         VOLUME (int) m^3 
         SOURCE (str) airport name
         DESTINATION (str) airport name
-        TRANSPORTER (int) the uav uuid that has transported this package
-        _LIFE_SPAN (int) the total time (number of steps) the package existed prior to reaching its desitnation
-        age (int) the total time the package exists from inception to now
+        TRANSPORTER (int) the uav uuid that has transported this parcel
+        _LIFE_SPAN (int) the total time (number of steps) the parcel existed prior to reaching its desitnation
+        age (int) the total time the parcel exists from inception to now
     
     '''
     def __init__(self, unique_id, model, source_name, pdf_params):
         '''
-        Create a package agent.
+        Create a parcel agent.
         Args:
-            unique_id - Unique package identifyer
+            unique_id - Unique parcel identifyer
             model - the ABM model
-            source_name - the airport this package is instantiated in 
+            source_name - the airport this parcel is instantiated in 
             pdf_params - probability mass/density function type and parameters #TODO
         '''
         #super().__init__(unique_id, model)
@@ -47,20 +47,20 @@ class Package():
         
     def increment_age(self): 
         '''
-        Increments the age of the package by a single step 
+        Increments the age of the parcel by a single step 
         '''
         self.age += 1 
     
     def setLifeSpan(self): 
         '''
-        upon arrival to destination, package is assumed delivered, its "destroyed" conceptually
+        upon arrival to destination, parcel is assumed delivered, its "destroyed" conceptually
         by setting its _LIFE_SPAN to its current age. 
         '''
         self._LIFE_SPAN = self.age
         
     def getLifeSpan(self):
         '''
-        accesor function for package life span 
+        accesor function for parcel life span 
         '''
         return self._LIFE_SPAN
     

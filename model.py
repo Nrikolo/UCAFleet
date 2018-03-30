@@ -37,7 +37,9 @@ from mesa.time import RandomActivation
 
 from uav import Uav
 from airport import Airport
-
+import uuid
+#Should the parcel be another type of agent? 
+#TODO: make consistent naming of functions and variables!!!! 
 
 
 class Fleet(Model):
@@ -47,9 +49,8 @@ class Fleet(Model):
         Airports : a dictionary of name (string) and position (x,y) in km 
         UAVs: Define number of UAVs in model and their initial spawning
         width, height: should be derived from airport locations, of the space
-        steps_per_hour: the number of steps per hour unit of time (60 means the step size is one minute)
-        
-        
+        steps_per_hour: the number of steps per hour unit of time (60 means the
+        step size is one minute)
         
     '''
     
@@ -62,9 +63,11 @@ class Fleet(Model):
         '''
         Create a new Fleet model.
         Args:
-            airports: a pandas DataFrame with airport name and location {name, x, y, pdf_params ,refuelingSpeed}
+            airports: a pandas DataFrame with airport name ,  location , 
+                probability density function parameters and refuelingRate
+                {name, x, y, pdfParams ,refuelingRate}
             num_uavs: the total number of UAVs in model (distribution is sort of random uniform for now)
-            
+            steps_per_hour: the number of steps per hour unit of time
             width, height: Size of the space.
         '''
         self._AIRPORTS = airports
@@ -73,7 +76,7 @@ class Fleet(Model):
      
         self.schedule = RandomActivation(self)
         self.space = ContinuousSpace(width, height, True)
-        self.package_aggregator = list()
+        self.parcel_aggregator = list()
         self.make_agents()
         self.running = True
 
@@ -88,20 +91,26 @@ class Fleet(Model):
         #    print row['c1'], row['c2']
         #TODO have a type designation in agents 
         for index,row in self._AIRPORTS.iterrows():
-            airport = Airport(i, self, ...)
-            
+            airport = Airport(uuid.uuid4(),self,index,(row('x'),row('y')),row['refuelingRate'] ,row['pdf_params'])
+            self.schedule.add(airport)
+        
         
     def make_uavs(self):
         '''
         '''
+        for index,row in self._AIRPORTS.iterrows():
+            airport = Airport(uuid.uuid4(),self,index,(row('x'),row('y')),row['refuelingRate'] ,row['pdf_params'])
+            self.schedule.add(airport)
+        
+        
         for i in range(self.num_uavs):
             
             pos = np.array((x, y))
             velocity = np.random.random(2) * 2 - 1
-            uav = Uav(i, self, pos, self.speed, velocity, self.vision,
+            uav = Uav(uuid.uuid4(), self, pos, self.speed, velocity,
                         self.separation, **self.factors)
             self.space.place_agent(uav, pos)
-            self.schedule.add(boid)
+            self.schedule.add(uav)
         
     def make_agents(self):
         '''
@@ -117,9 +126,8 @@ class Fleet(Model):
         '''
         
         random_airport_name = random.choice(self.airports).NAME
-        while random_airport_name not source_name:
+        while (random_airport_name == source_name):
             random_airport_name = random.choice(self.airports).NAME
-    
         return random_airport_name 
     
     def step(self):

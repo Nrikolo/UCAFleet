@@ -8,7 +8,7 @@ Created on Fri Mar 16 15:47:22 2018
 import pandas as pd
 import numpy as np
 
-from model import Fleet  # omit this in jupyter notebooks
+from model import Fleet
 
 
     
@@ -21,7 +21,9 @@ from model import Fleet  # omit this in jupyter notebooks
 #Specify the names and locations of the airports
 d = {'Name':['A','B'],
      'x' : [0., 200.],
-     'y' : [0., 0.  ]}
+     'y' : [0., 0.  ],
+     'pdf_params' : [1,1], 
+     'refuelingRate':[30,30]}
 #Convert to dataframe
 airports = pd.DataFrame(d)
 #Use 'Name' as index column
@@ -42,5 +44,5 @@ simlation_span = 10 #two hours
 
 model = Fleet(airports,num_uavs, steps_per_hour = 60, width=500, height = 500)
 
-for i in range(simlation_span):
-    model.step()
+#for i in range(simlation_span):
+#    model.step()
