@@ -8,7 +8,7 @@ Created on Fri Mar 16 21:49:52 2018
 import numpy as np
 #TODO: this import should be placed in the model? 
 from queue import Queue
-
+from parcelqueue import ParcelQueue
 from mesa import Agent
 
 
@@ -37,14 +37,20 @@ class Airport(Agent):
 
         '''
         super().__init__(unique_id, model)
+        self.type_ = 'airport'
         self.name = name
         self.pos = np.array(pos)
         self.REFUELING_RATE = refueling_rate
         self.PDF = pdf
-        self.uav_queue = Queue()
-        # Need to loop through all airports (as possible) destinations
-        
+        self.uav_queue = Queue()  # An empty queue for UAVs 
         self.parcel_queues = list()   
+        # Create a parcel queue for each of the OTHER airports in the model 
+        # Assumes all airports are within range and a single flight is required to deliver a parcel
+        for index,row in self.model._airports.iterrows():
+            if index == self.name:  # Airport from the list is the same as being constructed 
+                continue 
+            print (index)
+            self.parcel_queues.append(ParcelQueue(self.name, index))  # Create a parcel queue
         
         
     def load_uav(self,UAV):
@@ -54,12 +60,18 @@ class Airport(Agent):
         If there are more than MIN_PAYLOAD packages for one destination 
         function will load (for now return) a list of packages
         '''
+        for q in self.parcel_queues: 
+            #iterate throught the queue of parcels for a specific destination
+            shipment = q.get_parcels(self, UAV.MAX_PAYLOAD)
+            UAV.load(shipment, q.DESTINATION)
+        #return true if loaded 
+        pass
+        
         
     def generate_parcels(): 
         '''
         generates parcels in the airport based on probability density function 
         '''
-        self.parcel_queues[]
         pass
     
     def step(self):
@@ -70,10 +82,11 @@ class Airport(Agent):
         # UAVs are self refueling if their state allows it 
         
         # Generate packages based on probability density function parameters 
-        self.generate_parcels()        
-        # Loop through the UAV Queue (FIFO) 
+        self.generate_parcels()  
+        
+        for uavObj in self.uav_queue.queue: # Loop through the UAV Queue (FIFO) 
             #Try and load it 
-            self.load_uav(first_in_line)  # Loop though parcel's queues 
+            self.load_uav(uavObj)  # Loop though parcel's queues 
             # If enough package exist for a destination, 
                 # load on that UAV
         

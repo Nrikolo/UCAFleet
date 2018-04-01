@@ -49,7 +49,7 @@ class Uav(Agent):
     FUEL_CAPACITY = 300 #Liters
     FUEL_CONSUMPTION = 38 #Liters/hr
         
-    def __init__(self, unique_id, model, airport_name):
+    def __init__(self, unique_id, model, airport_agent):
         '''
         Create a new UAV agent.
         Args:
@@ -58,38 +58,52 @@ class Uav(Agent):
             airport_name: where the uav is instantiated
         '''
         super().__init__(unique_id, model)
-        self.source_name = airport_name
-        ##TODO: fix this, model doesn't have airports as attribute
-        self.pos = model._airports.loc[self.source_name].values
-        self.parcels = list()
-        self.payload = 0
+        self.type_ = 'uav'
+        self.source_name = airport_agent.name
+        # TODO: Figure out if this is redundent 
+        # since space.place_agent() sets the agent position already
+        self.pos = airport_agent.pos 
+        self._parcels = list()
+        self._payload = 0
         self.destination_name = None
         self.fuel = self.FUEL_CAPACITY #instantiated with full tank of gas 
-        self.odometer = 0
+        self._odometer = 0
         self.num_landings = 0 
-        self.STATE = 'IDLE'
+        self._STATE = 'IDLE'
 
-    
+    def load(self, shipment, destination):
+        '''
+        loads uav with shiptment menifest and sets destination in packages and uav
+        '''
+        #set transporter in all parcels in list 
+        
+        for p in shipment:
+            p.TRANSPORTER = self.unique_id
+
+        self.destination_name = destination            
+        self._update_payload()
+
+        
+        
     def finished_refueling(self): 
         '''
-        
+        Sets the fuel task to max capacity and changes state of uav to IDLE 
         '''
         self.fuel = self.FUEL_CAPACITY  # Ensure no overflow of fuel
-        self.STATE = 'IDLE'  # UAV is now waiting to be loaded, state change to IDLE
+        self._STATE = 'IDLE'  # UAV is now waiting to be loaded, state change to IDLE
         
     def finished_loading(self): 
         '''
+        
         '''
-        self.STATE = 'ONRAOUTE' # Since uav finished loading, it should be ready for takeoff
+        self._STATE = 'ONRAOUTE' # Since uav finished loading, it should be ready for takeoff
         #TODO: need to assign the uav a detination 
         
-    def update_payload(self): 
+    def _update_payload(self): 
         '''
         updates uav payload [kg] based on the current parcels loaded
         '''
-        self.payload = np.sum(Parcel.WEIGHT for Parcel in self.parcels )
-        
-
+        self._payload = np.sum(Parcel.WEIGHT for Parcel in self._parcels )
         
     def unload(self): 
         '''
@@ -98,11 +112,10 @@ class Uav(Agent):
         '''
         #move them to model "aggragator"
         self.model.parcel_aggregator += self.parcels
-        #unload parcels by clearing the list of parcels on the uav      
-        self.parcels[:] = []
-        update_payload() 
-        
-        
+    
+        self._parcels[:] = []  # Unload parcels by clearing the list of parcels on the uav      
+        self._update_payload() # Update the payload mass of the uav
+            
     def reached_destination(self):
         '''
         uav has reached its destination, function unloads UAV and changes its 
@@ -112,7 +125,13 @@ class Uav(Agent):
         #UAV is unloaded at destination
         self.unload()
         #change state to refueling 
-        self.STATE = 'REFUELING'
+        self._STATE = 'REFUELING'
+    
+    def _set_destination(self, destination):
+        '''
+        Sets destination of UAV based on the parcel queue used for loading it
+        '''
+        self.destination_name = destination
         
     def try_loading(self): 
         '''
@@ -121,16 +140,16 @@ class Uav(Agent):
         
         #TODO: implement as a public method of the airport the uav is in
         #TODO: need to assign the uav a detination 
-        self.parcels = list(self.model.airports.loc[self.source_name].load_uav(self))
-        update_payload()
-        
-        return self.parcels
+#        self.parcels = list(self.model.airports.loc[self.source_name].load_uav(self))
+#        self.update_payload()
+#        self.destination_name =
+        return True
 
     def step(self):
         '''
         Get the UAV's state, compute the next action 
         '''
-        if self.STATE == 'OnRoute':
+        if self._STATE == 'ONROUTE':
             #If uav is onroute to its destination, continue until reached
             
             ##TODO: can be done more efficiently if destination pose is stored? 
@@ -157,19 +176,19 @@ class Uav(Agent):
                 #the old position
                 new_position = self.pos + distance_per_step * heading_vector
                 #Add the distance traveled to the odometry
-                self.odometer += distance_per_step
+                self._odometer += distance_per_step
                 #Decrement the fuel available on UAV 
                 self.fuel -= self.FUEL_CONSUMPTION / (self.model.getStepsPerHour())
             else:
                 #Reached destination! 
                 new_position = destination_pose  # Set new position to be the destination
-                self.odometer += distance_to_destination  # Add actual distance to odometer
+                self._odometer += distance_to_destination  # Add actual distance to odometer
             
             #Move the agent to the new position
             self.model.space.move_agent(self, new_position)
             
 
-        if self.STATE == 'REFUEL':
+        if self._STATE == 'REFUEL':
             #If uav is refueling, continue until full
             
             if self.fuel < self.FUEL_CAPACITY:
@@ -180,11 +199,15 @@ class Uav(Agent):
             else:
                 self.finished_refueling()
                 
-        if self.STATE == 'IDLE' and self.try_loading(): 
+        #if self._STATE == 'IDLE' and self.try_loading(): 
+            # If loading is a passive activity of the UAV, 
+            # does it affect this state? 
+            
+        if self._STATE == 'IDLE':
+            pass
             #Assumes that loading takes 1 step
-            #TODO: consider adding a "LOADING" State for UAV if it is to take 
+            # TODO: consider adding a "LOADING" State for UAV if it is to take 
             #more than one step
-            self.finished_loading()
                 
                
         
@@ -193,37 +216,37 @@ class Uav(Agent):
 # Reference functions from example code        
 # =============================================================================
         
-    def cohere(self, neighbors):
-        '''
-        Return the vector toward the center of mass of the local neighbors.
-        '''
-        
-        cohere = np.zeros(2)
-        if neighbors:
-            for neighbor in neighbors:
-                cohere += self.model.space.get_heading(self.pos, neighbor.pos)
-            cohere /= len(neighbors)
-        return cohere
-
-    def separate(self, neighbors):
-        '''
-        Return a vector away from any neighbors closer than separation dist.
-        '''
-        me = self.pos
-        them = (n.pos for n in neighbors)
-        separation_vector = np.zeros(2)
-        for other in them:
-            if self.model.space.get_distance(me, other) < self.separation:
-                separation_vector -= self.model.space.get_heading(me, other)
-        return separation_vector
-
-
-       neighbors = self.model.space.get_neighbors(self.pos, self.vision, False)
-       self.velocity += (self.cohere(neighbors) * self.cohere_factor +
-                          self.separate(neighbors) * self.separate_factor +
-                          self.match_heading(neighbors) * self.match_factor) / 2
-        self.velocity /= np.linalg.norm(self.velocity)
-        new_pos = self.pos + self.velocity * self.speed
-        self.model.space.move_agent(self, new_pos)
+#    def cohere(self, neighbors):
+#        '''
+#        Return the vector toward the center of mass of the local neighbors.
+#        '''
+#        
+#        cohere = np.zeros(2)
+#        if neighbors:
+#            for neighbor in neighbors:
+#                cohere += self.model.space.get_heading(self.pos, neighbor.pos)
+#            cohere /= len(neighbors)
+#        return cohere
+#
+#    def separate(self, neighbors):
+#        '''
+#        Return a vector away from any neighbors closer than separation dist.
+#        '''
+#        me = self.pos
+#        them = (n.pos for n in neighbors)
+#        separation_vector = np.zeros(2)
+#        for other in them:
+#            if self.model.space.get_distance(me, other) < self.separation:
+#                separation_vector -= self.model.space.get_heading(me, other)
+#        return separation_vector
+#
+#
+#       neighbors = self.model.space.get_neighbors(self.pos, self.vision, False)
+#       self.velocity += (self.cohere(neighbors) * self.cohere_factor +
+#                          self.separate(neighbors) * self.separate_factor +
+#                          self.match_heading(neighbors) * self.match_factor) / 2
+#        self.velocity /= np.linalg.norm(self.velocity)
+#        new_pos = self.pos + self.velocity * self.speed
+#        self.model.space.move_agent(self, new_pos)
         
         

@@ -33,14 +33,14 @@ class Parcel(Agent):
             source_name - the airport this parcel is instantiated in 
             pdf_params - probability mass/density function type and parameters #TODO
         '''
-        #super().__init__(unique_id, model)
-        self.UUID = unique_id
+        super().__init__(unique_id, model)
+        self.type_ = 'parcel'
         self.SOURCE = source_name
         self.DESTINATION = model.get_random_destination_airport(self.SOURCE)
         #TODO: use random.choice(self.model.schedule.agents) 
         #would require implementing a custom scheduler with 2 types of agents
         #this would select a random agent (airport) from the list of available airports excluding the input 
-        self.TRANSPORTER = None 
+        self.TRANSPORTER = None # UUID of transporting uav
         self.WEIGHT = 2.5 * np.random.randn() + 10
         self.VOLUME = 2.1 * np.random.randn() + 1
         self.age = 0

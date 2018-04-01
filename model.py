@@ -32,11 +32,14 @@ __author__ = 'Nir Rikovitch'
 
 
 import random
-import numpy as np
+#import numpy as np
 
 from mesa import Model
 from mesa.space import ContinuousSpace
-from mesa.time import RandomActivation
+#from mesa.time import RandomActivation
+
+from schedule import RandomActivationByType
+
 
 from uav import Uav
 from airport import Airport
@@ -60,7 +63,7 @@ class Fleet(Model):
     
     def __init__(self,
                  airports,
-                 num_uavs,
+                 num_uav_per_airport,
                  steps_per_hour,
                  width=500,
                  height=500):
@@ -74,19 +77,24 @@ class Fleet(Model):
             steps_per_hour: the number of steps per hour unit of time
             width, height: Size of the space.
         '''
-        self._airpots = airports
-        self._number_of_uavs = num_uavs
+        self._airports = airports
+        self._num_uav_per_airport = num_uav_per_airport 
+        self._number_of_uavs = self._num_uav_per_airport * len(airports)
         self._steps_per_hour = steps_per_hour
-     
-        self.schedule = RandomActivation(self)
+        self.schedule = RandomActivationByType(self)
         self.space = ContinuousSpace(width, height, True)
         self.parcel_aggregator = list()
         self.make_agents()
-        self.running = True
+        #self.running = True
 
     def get_steps_per_hour(self): 
         return self._steps_per_hour
     
+    def get_other_airports(self,airport):
+        bad_df = self._airports.index.isin([airport.name])
+        return self._airports[~bad_df]
+
+        
     def make_airports(self):
         '''
         Creates airport agents based on the information within the dataframe 
@@ -97,38 +105,41 @@ class Fleet(Model):
         #    print row['c1'], row['c2']
         #TODO have a type designation in agents 
         for index,row in self._airports.iterrows():
-            airport = Airport(uuid.uuid4(),self,index,(row('x'),row('y')),row['refuelingRate'] ,row['pdf_params'])
+            #print (row)
+            #print (row['x'])
+            airport = Airport(uuid.uuid4(),
+                              self,
+                              index, #The airport name
+                              (row['x'],row['y']),
+                              row['refueling_rate'] ,
+                              row['pdf_params'])
             self.schedule.add(airport)
+            self.make_uavs(self._num_uav_per_airport,airport) #make a single uav at this airport
         
         
-    def make_uavs(self):
+    def make_uavs(self, num, airport):
         '''
-        Creates uavs agents based on the TODO: how to determine where?
+        Creates num uavs (agents) witin airport (source_name)
         
         '''
-        for index,row in self._airports.iterrows():
-            airport = Airport(uuid.uuid4(),self,index,(row('x'),row('y')),row['refuelingRate'] ,row['pdf_params'])
-            self.schedule.add(airport)
+        #Each airport will have a single uav 
+        #self.get_random_destination_airport()
         
-        
-        for i in range(self.num_uavs):
-            
-            pos = np.array((x, y))
-            velocity = np.random.random(2) * 2 - 1
-            uav = Uav(uuid.uuid4(), self, pos, self.speed, velocity,
-                        self.separation, **self.factors)
-            self.space.place_agent(uav, pos)
+        for i in range(num):    
+            uav = Uav(uuid.uuid4(), self, airport)
+            self.space.place_agent(uav, airport.pos)
             self.schedule.add(uav)
+            
         
     def make_agents(self):
         '''
         Create self.population agents, with airports and uavs
         '''
         self.make_airports()
-        self.make_uavs()
+        #self.make_uavs() #TODO: decouple airport and UAV creation (TBD)
         
     
-    def get_random_destination_airport(self,source_name): 
+    def get_random_destination_airport(self,source_name = None): 
         '''
         pulls a random airport from the available airports not including 
         the source airport name

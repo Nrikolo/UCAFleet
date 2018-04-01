@@ -18,29 +18,36 @@ from model import Fleet
 
 
 #Specify the names and locations of the airports
-d = {'Name':['A','B'],
-     'x' : [0., 200.],
-     'y' : [0., 0.  ],
+d = {'Name':['Toronto','Montreal'],
+     'x' : [0., 450.],
+     'y' : [0., 200.  ],
      'pdf_params' : [1,1], 
-     'refuelingRate':[30,30]}
+     'refueling_rate':[30,30]}
 #Convert to dataframe
 airports = pd.DataFrame(d)
+del d
 #Use 'Name' as index column
 airports.set_index('Name',drop=True, inplace=True)
 #print (airports)
 
 #Specify the allocations of UAVs per airport 
 
+
 #We shall specify the total number of UAVs
-#Those are presently evenly and randomly distributed within airports
-num_uavs = 1 
+total_num_uavs = 2
+num_uav_per_airport = int( total_num_uavs / len(airports))
+
 
 #Specify the amount of time (number of steps) the simulation is to run
 simlation_span = 10 
 #Each step is one minute!!!
 
 
-model = Fleet(airports,num_uavs, steps_per_hour = 60, width=500, height = 500)
+model = Fleet(airports,
+              num_uav_per_airport,
+              steps_per_hour = 60,
+              width=500,
+              height = 500)
 
 #for i in range(simlation_span):
 #    model.step()
