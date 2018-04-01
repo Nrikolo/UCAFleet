@@ -27,6 +27,9 @@ A Mesa implementation of an aerial delivery network.
 Uses numpy arrays to represent vectors.
 '''
 
+__version__ = '0'
+__author__ = 'Nir Rikovitch'
+
 
 import random
 import numpy as np
@@ -37,6 +40,7 @@ from mesa.time import RandomActivation
 
 from uav import Uav
 from airport import Airport
+from parcel import Parcel
 import uuid
 #Should the parcel be another type of agent? 
 #TODO: make consistent naming of functions and variables!!!! 
@@ -70,9 +74,9 @@ class Fleet(Model):
             steps_per_hour: the number of steps per hour unit of time
             width, height: Size of the space.
         '''
-        self._AIRPORTS = airports
-        self._NUM_UAVS = num_uavs
-        self._STEPS_PER_HOUR = steps_per_hour
+        self._airpots = airports
+        self._number_of_uavs = num_uavs
+        self._steps_per_hour = steps_per_hour
      
         self.schedule = RandomActivation(self)
         self.space = ContinuousSpace(width, height, True)
@@ -80,25 +84,29 @@ class Fleet(Model):
         self.make_agents()
         self.running = True
 
-    def getStepsPerHour(self): 
-        return self._STEPS_PER_HOUR
+    def get_steps_per_hour(self): 
+        return self._steps_per_hour
     
     def make_airports(self):
         '''
+        Creates airport agents based on the information within the dataframe 
+        for the airports within the Fleet region of operation (model)
         '''
         
         #for index, row in df.iterrows():
         #    print row['c1'], row['c2']
         #TODO have a type designation in agents 
-        for index,row in self._AIRPORTS.iterrows():
+        for index,row in self._airports.iterrows():
             airport = Airport(uuid.uuid4(),self,index,(row('x'),row('y')),row['refuelingRate'] ,row['pdf_params'])
             self.schedule.add(airport)
         
         
     def make_uavs(self):
         '''
+        Creates uavs agents based on the TODO: how to determine where?
+        
         '''
-        for index,row in self._AIRPORTS.iterrows():
+        for index,row in self._airports.iterrows():
             airport = Airport(uuid.uuid4(),self,index,(row('x'),row('y')),row['refuelingRate'] ,row['pdf_params'])
             self.schedule.add(airport)
         
@@ -114,21 +122,23 @@ class Fleet(Model):
         
     def make_agents(self):
         '''
-        Create self.population agents, with random positions and starting headings.
+        Create self.population agents, with airports and uavs
         '''
         self.make_airports()
         self.make_uavs()
         
     
-    def getRandomDestinationAirport(self,source_name): 
+    def get_random_destination_airport(self,source_name): 
         '''
-        pulls a random airport from the available airports not including the source airport name
+        pulls a random airport from the available airports not including 
+        the source airport name
         '''
         
-        random_airport_name = random.choice(self.airports).NAME
+        random_airport_name = random.choice(self._airports).NAME
         while (random_airport_name == source_name):
-            random_airport_name = random.choice(self.airports).NAME
+            random_airport_name = random.choice(self._airports).NAME
         return random_airport_name 
     
     def step(self):
+        # Agent activation should be by this order: airports, packages, uavs
         self.schedule.step()

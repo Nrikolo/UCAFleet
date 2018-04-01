@@ -6,7 +6,6 @@ Created on Fri Mar 16 15:47:22 2018
 """
 
 import pandas as pd
-import numpy as np
 
 from model import Fleet
 
@@ -36,9 +35,8 @@ airports.set_index('Name',drop=True, inplace=True)
 #Those are presently evenly and randomly distributed within airports
 num_uavs = 1 
 
-
 #Specify the amount of time (number of steps) the simulation is to run
-simlation_span = 10 #two hours
+simlation_span = 10 
 #Each step is one minute!!!
 
 
@@ -46,3 +44,9 @@ model = Fleet(airports,num_uavs, steps_per_hour = 60, width=500, height = 500)
 
 #for i in range(simlation_span):
 #    model.step()
+
+
+
+#parcel_age = [parcel._LIFESPAN for a in model.schedule.agents]
+#plt.hist(parcel_age)
+#plt.show()

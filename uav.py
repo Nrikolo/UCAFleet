@@ -60,7 +60,7 @@ class Uav(Agent):
         super().__init__(unique_id, model)
         self.source_name = airport_name
         ##TODO: fix this, model doesn't have airports as attribute
-        self.pos = model.airports.loc[self.source_name].values
+        self.pos = model._airports.loc[self.source_name].values
         self.parcels = list()
         self.payload = 0
         self.destination_name = None
@@ -71,13 +71,17 @@ class Uav(Agent):
 
     
     def finished_refueling(self): 
-        #Ensure no overflow of fuel
-        self.fuel = self.FUEL_CAPACITY
-        #UAV is now waiting to be loaded, state change to IDLE
-        self.STATE = 'IDLE'
+        '''
+        
+        '''
+        self.fuel = self.FUEL_CAPACITY  # Ensure no overflow of fuel
+        self.STATE = 'IDLE'  # UAV is now waiting to be loaded, state change to IDLE
         
     def finished_loading(self): 
-        self.STATE = 'ONRAOUTE'
+        '''
+        '''
+        self.STATE = 'ONRAOUTE' # Since uav finished loading, it should be ready for takeoff
+        #TODO: need to assign the uav a detination 
         
     def update_payload(self): 
         '''
@@ -96,6 +100,7 @@ class Uav(Agent):
         self.model.parcel_aggregator += self.parcels
         #unload parcels by clearing the list of parcels on the uav      
         self.parcels[:] = []
+        update_payload() 
         
         
     def reached_destination(self):
@@ -115,9 +120,11 @@ class Uav(Agent):
         '''
         
         #TODO: implement as a public method of the airport the uav is in
+        #TODO: need to assign the uav a detination 
         self.parcels = list(self.model.airports.loc[self.source_name].load_uav(self))
-        return self.parcels
+        update_payload()
         
+        return self.parcels
 
     def step(self):
         '''
@@ -132,7 +139,7 @@ class Uav(Agent):
             distance_to_destination = self.model.space.get_distance(self.pos,
                                                                     destination_pose )
             #TODO: might make sense to have this as an attribute since its not changing 
-            distance_per_step = self.SPEED/(self.model.getStepsPerHour())
+            distance_per_step = self.SPEED/(self.model.get_steps_per_hour())
             
             #If the distance left to reach destination is less than what the UAV 
             #will cover in this step, it has reached the destination
@@ -143,7 +150,7 @@ class Uav(Agent):
                 
                 #The translation vector             
                 error_vector = self.model.space.get_heading(self.pos,
-                                                            destination_pose )
+                                                            destination_pose)
                 #Heading vector is obtained by normalizing (unit vector)
                 heading_vector = error_vector/ distance_to_destination     
                 #Compute the new position by adding the translation vector to 
@@ -155,10 +162,8 @@ class Uav(Agent):
                 self.fuel -= self.FUEL_CONSUMPTION / (self.model.getStepsPerHour())
             else:
                 #Reached destination! 
-                #set new position to be the destination
-                new_position = destination_pose
-                #add actual distance to odometer
-                self.odometer += distance_to_destination
+                new_position = destination_pose  # Set new position to be the destination
+                self.odometer += distance_to_destination  # Add actual distance to odometer
             
             #Move the agent to the new position
             self.model.space.move_agent(self, new_position)
@@ -182,16 +187,8 @@ class Uav(Agent):
             self.finished_loading()
                 
                
-        #If Idle
         
-        neighbors = self.model.space.get_neighbors(self.pos, self.vision, False)
-        self.velocity += (self.cohere(neighbors) * self.cohere_factor +
-                          self.separate(neighbors) * self.separate_factor +
-                          self.match_heading(neighbors) * self.match_factor) / 2
-        self.velocity /= np.linalg.norm(self.velocity)
-        new_pos = self.pos + self.velocity * self.speed
-        self.model.space.move_agent(self, new_pos)
-        
+ 
 # =============================================================================
 # Reference functions from example code        
 # =============================================================================
@@ -220,13 +217,13 @@ class Uav(Agent):
                 separation_vector -= self.model.space.get_heading(me, other)
         return separation_vector
 
-    def match_heading(self, neighbors):
-        '''
-        Return a vector of the neighbors' average heading.
-        '''
-        match_vector = np.zeros(2)
-        if neighbors:
-            for neighbor in neighbors:
-                match_vector += neighbor.velocity
-            match_vector /= len(neighbors)
-        return match_vector
+
+       neighbors = self.model.space.get_neighbors(self.pos, self.vision, False)
+       self.velocity += (self.cohere(neighbors) * self.cohere_factor +
+                          self.separate(neighbors) * self.separate_factor +
+                          self.match_heading(neighbors) * self.match_factor) / 2
+        self.velocity /= np.linalg.norm(self.velocity)
+        new_pos = self.pos + self.velocity * self.speed
+        self.model.space.move_agent(self, new_pos)
+        
+        
