@@ -5,10 +5,10 @@ Created on Fri Mar 16 21:33:13 2018
 @author: Riko
 """
 
-import numpy as np
+#import numpy as np
 
 from mesa import Agent
-from parcel import Parcel
+#from parcel import Parcel
 
 
 class Uav(Agent):
@@ -57,6 +57,7 @@ class Uav(Agent):
             model: the model 
             airport_name: where the uav is instantiated
         '''
+        print("Creating a uav instance with id {} in airport {}".format(unique_id,airport_agent.name))
         super().__init__(unique_id, model)
         self.type_ = 'uav'
         self.source_name = airport_agent.name
@@ -71,7 +72,7 @@ class Uav(Agent):
         self.num_landings = 0 
         self._STATE = 'IDLE'
 
-    def load(self, shipment, destination):
+    def load(self, shipment, destination, mass=None):
         '''
         loads uav with shiptment menifest and sets destination in packages and uav
         '''
@@ -79,11 +80,10 @@ class Uav(Agent):
         
         for p in shipment:
             p.TRANSPORTER = self.unique_id
-
-        self.destination_name = destination            
-        self._update_payload()
-
-        
+        self._parcels = shipment    
+        self._set_destination(destination)  # TODO: should be deduced from the shipment? 
+        self._update_payload(mass)
+        self.finished_loading()        
         
     def finished_refueling(self): 
         '''
@@ -99,11 +99,18 @@ class Uav(Agent):
         self._STATE = 'ONRAOUTE' # Since uav finished loading, it should be ready for takeoff
         #TODO: need to assign the uav a detination 
         
-    def _update_payload(self): 
+    def _update_payload(self, mass=None): 
         '''
         updates uav payload [kg] based on the current parcels loaded
         '''
-        self._payload = np.sum(Parcel.WEIGHT for Parcel in self._parcels )
+        
+        if mass is None:
+            for p in self._parcels:
+                self._payload += p.MASS
+        else: 
+            self._payload = mass
+        
+        pass
         
     def unload(self): 
         '''

@@ -5,11 +5,12 @@ Created on Fri Mar 16 21:52:14 2018
 @author: Riko
 """
 
-import numpy as np
+import random 
+import uuid 
+
 from queue import Queue
 
-from mesa import Agent
-
+from parcel import Parcel 
 
 class ParcelQueue():
     '''
@@ -20,7 +21,7 @@ class ParcelQueue():
         DESTINATION (str) airport name
         
     '''
-    def __init__(self, source_name, destination_name, pdf_params = None):
+    def __init__(self, model, source_name, destination_name, pdf_params = None):
         '''
         Create a parcel agent.
         Args:
@@ -31,24 +32,61 @@ class ParcelQueue():
                 
         '''
         #super().__init__(unique_id, model)
+        self.model = model
         self.SOURCE = source_name
         self.DESTINATION = destination_name
         self.queue_ =  Queue() # The parcel queue 
-            
+
+    def generate_parcels(self,number=1):
+        '''
+        generates parcels within the queue based on probability density function
+        FOR NOW implemented as 80% chance a parcel is created 
+        '''    
+        for i in range(number):
+            if random.random() > 0.2:
+                #print("{}. {} appears {} times.".format(i, key, wordBank[key]))
+                print("Creating parcel in {} destined to {}".format(self.SOURCE, self.DESTINATION))
+                p = Parcel(uuid.uuid4(),
+                           self.model,
+                           self.SOURCE,
+                           self.DESTINATION)
+                self.queue_.put(p)
+                self.model.schedule.add(p)
+                
+    def get_size(self):
+        '''
+        returns the number of parcels in the queue 
+        '''
+        return len(self.queue_.queue)
+
     def get_parcels(self, mass_limit): 
         '''
-        returns a list of parcels and thier total mass [payload] for shipment that weigths no more than [mass_limit] and removed from queue 
+        returns a list of parcels and their total mass [payload] for shipment that weigths no more than [mass_limit] and removed from queue 
         '''
-        # TODO: implement only taking the oldest parcels that amount to no more than
-        # the mass_limit. 
         
-        # Entire queue is to be shipped 
-        shipment = list(self.queue_.queue) # Cast to list and assign to shipment
+        # TODO: change implementation to something more elegant.
+        # will be nicer once use collections.deque instead of queue.Queue 
         
-        with self.queue_.mutex:
-            self.queue_.queue.clear()  # Clear the queue of the parcels taken for shipment        
-        return shipment                     
+#        print ("This queue has {} parcels".format(self.get_size()))
+        shipment = list()
+        shipment_mass = 0.0
+        shipment_size   = 0
+        for i in range(self.get_size()): 
+#            print ("i=",i)
+            temp = shipment_mass + self.queue_.queue[i].MASS 
+            if temp < mass_limit :
+                shipment_mass += self.queue_.queue[i].MASS 
+#                print ("Added package number {}, whose weight is {}, shipment weight: {}".format(i, self.queue_.queue[i].WEIGHT, shipment_weight))
+                shipment_size += 1
+        
+        print ("shipment size is {} parcels".format(shipment_size))
+        for i in range(shipment_size): 
+            shipment.append(self.queue_.get()) #Remover from queue and append to shipment
+        
+#        print (shipment_weight)
+        return shipment, shipment_mass
 
+    
 #    def step(self):
 #        '''
 #        Not sure this is best implemented as an agent. Might make more sense for 

@@ -15,7 +15,7 @@ class Parcel(Agent):
     A Parcel class.
     The agent has the following attributes:
         UUID (int) a unique identifier for this parcel  
-        WEIGHT (int) kg
+        MASS (int) kg
         VOLUME (int) m^3 
         SOURCE (str) airport name
         DESTINATION (str) airport name
@@ -24,7 +24,7 @@ class Parcel(Agent):
         age (int) the total time the parcel exists from inception to now
     
     '''
-    def __init__(self, unique_id, model, source_name, pdf_params):
+    def __init__(self, unique_id, model, source_name, destination_name, pdf_params = None):
         '''
         Create a parcel agent.
         Args:
@@ -36,17 +36,17 @@ class Parcel(Agent):
         super().__init__(unique_id, model)
         self.type_ = 'parcel'
         self.SOURCE = source_name
-        self.DESTINATION = model.get_random_destination_airport(self.SOURCE)
+        self.DESTINATION = destination_name
         #TODO: use random.choice(self.model.schedule.agents) 
         #would require implementing a custom scheduler with 2 types of agents
         #this would select a random agent (airport) from the list of available airports excluding the input 
         self.TRANSPORTER = None # UUID of transporting uav
-        self.WEIGHT = 2.5 * np.random.randn() + 10
+        self.MASS = 2.5 * np.random.randn() + 10
         self.VOLUME = 2.1 * np.random.randn() + 1
         self.age = 0
         self._LIFESPAN = None 
         
-    def parcel_weight():
+    def parcel_mass():
         pass
         
     def parcel_volume():

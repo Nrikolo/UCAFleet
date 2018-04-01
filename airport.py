@@ -36,6 +36,7 @@ class Airport(Agent):
             pdf:
 
         '''
+        print("Creating an airport instance with id {} in {}".format(unique_id,name))
         super().__init__(unique_id, model)
         self.type_ = 'airport'
         self.name = name
@@ -49,12 +50,12 @@ class Airport(Agent):
         for index,row in self.model._airports.iterrows():
             if index == self.name:  # Airport from the list is the same as being constructed 
                 continue 
-            print (index)
-            self.parcel_queues.append(ParcelQueue(self.name, index))  # Create a parcel queue
+            self.parcel_queues.append(ParcelQueue(self.model,self.name, index))  # Create a parcel queue
         
         
     def load_uav(self,UAV):
         '''
+        #TODO: update dox for actual implementation
         provide a list (or queue) of packages to be transported by calling uav
         
         If there are more than MIN_PAYLOAD packages for one destination 
@@ -62,7 +63,7 @@ class Airport(Agent):
         '''
         for q in self.parcel_queues: 
             #iterate throught the queue of parcels for a specific destination
-            shipment = q.get_parcels(self, UAV.MAX_PAYLOAD)
+            shipment, shipment_mass = q.get_parcels(self, UAV.MAX_PAYLOAD)
             UAV.load(shipment, q.DESTINATION)
         #return true if loaded 
         pass
@@ -72,6 +73,8 @@ class Airport(Agent):
         '''
         generates parcels in the airport based on probability density function 
         '''
+        # Iterate through all parcel queue objects and generate parcels
+        
         pass
     
     def step(self):
@@ -85,6 +88,7 @@ class Airport(Agent):
         self.generate_parcels()  
         
         for uavObj in self.uav_queue.queue: # Loop through the UAV Queue (FIFO) 
+            print ("Attempting to load {}".format(uavObj.uniqe_id))
             #Try and load it 
             self.load_uav(uavObj)  # Loop though parcel's queues 
             # If enough package exist for a destination, 
