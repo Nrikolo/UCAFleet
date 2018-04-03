@@ -8,6 +8,7 @@ Created on Fri Mar 16 21:33:13 2018
 #import numpy as np
 
 from mesa import Agent
+from airport import Airport 
 #from parcel import Parcel
 
 
@@ -49,7 +50,7 @@ class Uav(Agent):
     FUEL_CAPACITY = 300 #Liters
     FUEL_CONSUMPTION = 38 #Liters/hr
         
-    def __init__(self, unique_id, model, airport_agent):
+    def __init__(self, unique_id, model, airportObj):
         '''
         Create a new UAV agent.
         Args:
@@ -57,13 +58,13 @@ class Uav(Agent):
             model: the model 
             airport_name: where the uav is instantiated
         '''
-        print("Creating a uav instance with id {} in airport {}".format(unique_id,airport_agent.name))
+        print("Creating a uav instance with id {} in airport {}".format(unique_id, airportObj.name))
         super().__init__(unique_id, model)
         self.type_ = 'uav'
-        self.source_name = airport_agent.name
+        self.source_name = airportObj.name
         # TODO: Figure out if this is redundent 
         # since space.place_agent() sets the agent position already
-        self.pos = airport_agent.pos 
+        self.pos = airportObj.pos 
         self._parcels = list()
         self._payload = 0
         self.destination_name = None
@@ -72,6 +73,12 @@ class Uav(Agent):
         self.num_landings = 0 
         self._STATE = 'IDLE'
 
+    def is_IDLE(self):
+        return self.get_state() is 'IDLE'
+    
+    def get_state(self): 
+        return self._STATE
+    
     def load(self, shipment, destination, mass=None):
         '''
         loads uav with shiptment menifest and sets destination in packages and uav
@@ -83,21 +90,20 @@ class Uav(Agent):
         self._parcels = shipment    
         self._set_destination(destination)  # TODO: should be deduced from the shipment? 
         self._update_payload(mass)
-        self.finished_loading()        
+        self._finished_loading()        
         
-    def finished_refueling(self): 
+    def _finished_refueling(self): 
         '''
         Sets the fuel task to max capacity and changes state of uav to IDLE 
         '''
         self.fuel = self.FUEL_CAPACITY  # Ensure no overflow of fuel
         self._STATE = 'IDLE'  # UAV is now waiting to be loaded, state change to IDLE
         
-    def finished_loading(self): 
+    def _finished_loading(self): 
         '''
-        
+        a state change for uav so that in the next time step it would progress to wards its destination
         '''
         self._STATE = 'ONRAOUTE' # Since uav finished loading, it should be ready for takeoff
-        #TODO: need to assign the uav a detination 
         
     def _update_payload(self, mass=None): 
         '''
@@ -112,7 +118,7 @@ class Uav(Agent):
         
         pass
         
-    def unload(self): 
+    def _unload(self): 
         '''
         unloads uav parcels into a model level aggregator (for later introspection)
         and clears the payload 
@@ -123,14 +129,15 @@ class Uav(Agent):
         self._parcels[:] = []  # Unload parcels by clearing the list of parcels on the uav      
         self._update_payload() # Update the payload mass of the uav
             
-    def reached_destination(self):
+    def _reached_destination(self):
         '''
         uav has reached its destination, function unloads UAV and changes its 
         state to refueling
         '''
         #UAV has landed
+        # TODO: Include this uav in airport uav queue
         #UAV is unloaded at destination
-        self.unload()
+        self._unload()
         #change state to refueling 
         self._STATE = 'REFUELING'
     
@@ -145,11 +152,6 @@ class Uav(Agent):
         returns true if loading was succesful and false otherwise 
         '''
         
-        #TODO: implement as a public method of the airport the uav is in
-        #TODO: need to assign the uav a detination 
-#        self.parcels = list(self.model.airports.loc[self.source_name].load_uav(self))
-#        self.update_payload()
-#        self.destination_name =
         return True
 
     def step(self):
@@ -190,6 +192,8 @@ class Uav(Agent):
                 #Reached destination! 
                 new_position = destination_pose  # Set new position to be the destination
                 self._odometer += distance_to_destination  # Add actual distance to odometer
+                self._reached_destination() 
+                
             
             #Move the agent to the new position
             self.model.space.move_agent(self, new_position)
@@ -201,10 +205,11 @@ class Uav(Agent):
             if self.fuel < self.FUEL_CAPACITY:
                 #TODO: get the REFUELING_SPEED from the current airport 
                 #(self.SOURCE) the UAV is in
-                #self.fuel += self.model.airports.loc[self.SOURCE].values.REFUELING_SPEED
-                self.fuel += 30
+                self.fuel += Airport.find_by_name[self.SOURCE][0].REFUELING_RATE
+                #https://stackoverflow.com/questions/10858575/find-object-by-its-member-inside-a-list-in-python
+#                self.fuel += 30
             else:
-                self.finished_refueling()
+                self._finished_refueling()
                 
         #if self._STATE == 'IDLE' and self.try_loading(): 
             # If loading is a passive activity of the UAV, 

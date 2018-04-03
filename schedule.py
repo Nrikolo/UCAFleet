@@ -81,6 +81,7 @@ class RandomActivationByType(RandomActivation):
             breed: Class object of the breed to run.
         '''
         agents = self.agents_by_type[type_]
+        # TODO: change order of activation here
         random.shuffle(agents)
         for agent in agents:
             agent.step()

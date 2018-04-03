@@ -91,9 +91,8 @@ class Fleet(Model):
         return self._steps_per_hour
     
     def get_other_airports(self,airport):
-        bad_df = self._airports.index.isin([airport.name])
-        return self._airports[~bad_df]
-
+        other_airports_indx = self._airports.index.isin([airport.name])
+        return self._airports[~other_airports_indx]
         
     def make_airports(self):
         '''
@@ -117,17 +116,18 @@ class Fleet(Model):
             self.make_uavs(self._num_uav_per_airport,airport) #make a single uav at this airport
         
         
-    def make_uavs(self, num, airport):
+    def make_uavs(self, amount, airportObj):
         '''
-        Creates num uavs (agents) witin airport (source_name)
+        Creates an amount of uavs (agents) witin airport object
         
         '''
-        #Each airport will have a single uav 
-        #self.get_random_destination_airport()
+        #Each airport will have an amount of uavs
         
-        for i in range(num):    
-            uav = Uav(uuid.uuid4(), self, airport)
-            self.space.place_agent(uav, airport.pos)
+        
+        for i in range(amount):    
+            uav = Uav(uuid.uuid4(), self, airportObj)
+            airportObj.store_uav(uav)
+            self.space.place_agent(uav, airportObj.pos)
             self.schedule.add(uav)
             
         

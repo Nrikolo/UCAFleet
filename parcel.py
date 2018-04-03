@@ -2,36 +2,39 @@
 """
 Created on Fri Mar 16 21:52:14 2018
 
-@author: Riko
+@author: Nir Rikovitch
 """
 
 import numpy as np
-
 from mesa import Agent
 
 
 class Parcel(Agent):
     '''
-    A Parcel class.
-    The agent has the following attributes:
-        UUID (int) a unique identifier for this parcel  
-        MASS (int) kg
-        VOLUME (int) m^3 
-        SOURCE (str) airport name
-        DESTINATION (str) airport name
-        TRANSPORTER (int) the uav uuid that has transported this parcel
-        _LIFE_SPAN (int) the total time (number of steps) the parcel existed prior to reaching its desitnation
-        age (int) the total time the parcel exists from inception to now
+    A Parcel class representing a package/parcel meant for shipment
     
+    This Parcal class inherits from the mesa agent class and behaves as 
+    a passive agent. Meaning, it is handled by other classes from being 
+    instanciated, loaded, moved and destroyed. 
+    
+    Attributes: 
+        UUID (uuid): a unique identifier for this parcel  
+        model (:obj:'Fleet'): an instance of class 'Fleet' representing the model
+        pdf_params (?): probability density function parameters for parcel mass the volume generation
+        MASS (float): the mass of the parcel [kg]
+        VOLUME (float): the metric volume of the parcel [m^3] 
+        SOURCE (str): airport name where the parcel is from
+        DESTINATION (str): airport name where the parcel is destined to
+        TRANSPORTER (uuid): the uav uuid that has transported this parcel
+        _LIFE_SPAN (int): the total time (number of steps): the parcel existed prior to reaching its desitnation
+        age (int): the total time the parcel exists from inception till now
     '''
+    
     def __init__(self, unique_id, model, source_name, destination_name, pdf_params = None):
         '''
         Create a parcel agent.
         Args:
-            unique_id - Unique parcel identifyer
-            model - the ABM model
-            source_name - the airport this parcel is instantiated in 
-            pdf_params - probability mass/density function type and parameters #TODO
+            see class documentation 
         '''
         super().__init__(unique_id, model)
         self.type_ = 'parcel'
@@ -52,7 +55,7 @@ class Parcel(Agent):
     def parcel_volume():
         pass        
         
-    def increment_age(self): 
+    def _increment_age(self): 
         '''
         Increments the age of the parcel by a single step 
         '''
@@ -73,8 +76,8 @@ class Parcel(Agent):
     
     def step(self):
         '''
-        
+        Implements the step method of the agent of type parcel by aging it one step.
         '''
-        self.increment_age()
+        self._increment_age()
         
     
