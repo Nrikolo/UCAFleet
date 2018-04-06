@@ -32,6 +32,8 @@ and destination must be connected by a single flight segment.
 * ``model.py``: Contains the agent class, and the overall model class.
 * ``uav.py``: Contains the uav agent class
 * ``airport.py``: Contains the airport agent class
-* ``parcel.py``: Contains the package class (non agent)
+* ``parcel.py``: Contains the parcel (package) class 
+* ``parcelqueue.py``: Contains the parcel queue class 
+* ``schedule.py``: Defines the schedule
 * ``server.py``: Defines classes for visualizing the model in the browser via 
 Mesa's modular server, and instantiates a visualization server.

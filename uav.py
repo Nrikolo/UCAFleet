@@ -6,11 +6,11 @@ Created on Fri Mar 16 21:33:13 2018
 """
 
 #import numpy as np
+from collections import defaultdict
 
 from mesa import Agent
 from airport import Airport 
 #from parcel import Parcel
-
 
 class Uav(Agent):
     '''
@@ -49,7 +49,9 @@ class Uav(Agent):
     MAX_RANGE     = 2300 #km
     FUEL_CAPACITY = 300 #Liters
     FUEL_CONSUMPTION = 38 #Liters/hr
-        
+    
+    name_index = defaultdict(list)
+
     def __init__(self, unique_id, model, airportObj):
         '''
         Create a new UAV agent.
@@ -60,37 +62,32 @@ class Uav(Agent):
         '''
         print("Creating a uav instance with id {} in airport {}".format(unique_id, airportObj.name))
         super().__init__(unique_id, model)
-        self.type_ = 'uav'
-        self.source_name = airportObj.name
+        
         # TODO: Figure out if this is redundent 
         # since space.place_agent() sets the agent position already
-        self.pos = airportObj.pos 
+        #"Private"
         self._parcels = list()
         self._payload = 0
+        self._odometer = 0
+        self._STATE = 'IDLE'
+        #"Public"
+        self.pos = airportObj.pos 
+        self.type_ = 'uav'
+        self.source_name = airportObj.name
+        self.num_landings = 0 
         self.destination_name = None
         self.fuel = self.FUEL_CAPACITY #instantiated with full tank of gas 
-        self._odometer = 0
-        self.num_landings = 0 
-        self._STATE = 'IDLE'
-
-    def is_IDLE(self):
-        return self.get_state() is 'IDLE'
-    
-    def get_state(self): 
-        return self._STATE
-    
-    def load(self, shipment, destination, mass=None):
-        '''
-        loads uav with shiptment menifest and sets destination in packages and uav
-        '''
-        #set transporter in all parcels in list 
         
-        for p in shipment:
-            p.TRANSPORTER = self.unique_id
-        self._parcels = shipment    
-        self._set_destination(destination)  # TODO: should be deduced from the shipment? 
-        self._update_payload(mass)
-        self._finished_loading()        
+        Uav.name_index[self.unique_id].append(self)
+
+        
+    @classmethod
+    def find_by_name(cls,name): 
+        return Uav.name_index[name]
+    
+# =============================================================================
+#     Pseudo private methods 
+# =============================================================================
         
     def _finished_refueling(self): 
         '''
@@ -146,6 +143,29 @@ class Uav(Agent):
         Sets destination of UAV based on the parcel queue used for loading it
         '''
         self.destination_name = destination
+
+# =============================================================================
+# pseudo public methods 
+# =============================================================================
+
+    def is_IDLE(self):
+        return self.get_state() is 'IDLE'
+    
+    def get_state(self): 
+        return self._STATE
+    
+    def load(self, shipment, destination, mass=None):
+        '''
+        loads uav with shiptment menifest and sets destination in packages and uav
+        '''
+        #set transporter in all parcels in list 
+        
+        for p in shipment:
+            p.set_transporter(self)
+        self._parcels = shipment    
+        self._set_destination(destination)  # TODO: should be deduced from the shipment? 
+        self._update_payload(mass)
+        self._finished_loading()        
         
     def try_loading(self): 
         '''
@@ -222,43 +242,4 @@ class Uav(Agent):
             #more than one step
                 
                
-        
- 
-# =============================================================================
-# Reference functions from example code        
-# =============================================================================
-        
-#    def cohere(self, neighbors):
-#        '''
-#        Return the vector toward the center of mass of the local neighbors.
-#        '''
-#        
-#        cohere = np.zeros(2)
-#        if neighbors:
-#            for neighbor in neighbors:
-#                cohere += self.model.space.get_heading(self.pos, neighbor.pos)
-#            cohere /= len(neighbors)
-#        return cohere
-#
-#    def separate(self, neighbors):
-#        '''
-#        Return a vector away from any neighbors closer than separation dist.
-#        '''
-#        me = self.pos
-#        them = (n.pos for n in neighbors)
-#        separation_vector = np.zeros(2)
-#        for other in them:
-#            if self.model.space.get_distance(me, other) < self.separation:
-#                separation_vector -= self.model.space.get_heading(me, other)
-#        return separation_vector
-#
-#
-#       neighbors = self.model.space.get_neighbors(self.pos, self.vision, False)
-#       self.velocity += (self.cohere(neighbors) * self.cohere_factor +
-#                          self.separate(neighbors) * self.separate_factor +
-#                          self.match_heading(neighbors) * self.match_factor) / 2
-#        self.velocity /= np.linalg.norm(self.velocity)
-#        new_pos = self.pos + self.velocity * self.speed
-#        self.model.space.move_agent(self, new_pos)
-        
         

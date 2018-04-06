@@ -37,30 +37,44 @@ class Parcel(Agent):
             see class documentation 
         '''
         super().__init__(unique_id, model)
+        # "Private"
+        self._LIFESPAN = None 
+        self._TRANSPORTER = None # UUID of transporting uav
+        
+        # "Public"
         self.type_ = 'parcel'
         self.SOURCE = source_name
         self.DESTINATION = destination_name
         #TODO: use random.choice(self.model.schedule.agents) 
         #would require implementing a custom scheduler with 2 types of agents
         #this would select a random agent (airport) from the list of available airports excluding the input 
-        self.TRANSPORTER = None # UUID of transporting uav
+        
         self.MASS = 2.5 * np.random.randn() + 10
         self.VOLUME = 2.1 * np.random.randn() + 1
         self.age = 0
-        self._LIFESPAN = None 
+       
         
-    def parcel_mass():
-        pass
-        
-    def parcel_volume():
-        pass        
+# =============================================================================
+#     pseudo private methods
+# =============================================================================
         
     def _increment_age(self): 
         '''
         Increments the age of the parcel by a single step 
         '''
         self.age += 1 
+
+# =============================================================================
+#     pseudo public methods
+# =============================================================================
     
+    def set_transporter(self,uavObj):
+        '''
+        accessor to set the uav that transports this parcel
+        '''
+        self._TRANSPORTER = uavObj.unique_id
+        
+        
     def delivered(self): 
         '''
         upon arrival to destination, parcel is assumed delivered, its "destroyed" conceptually
@@ -73,6 +87,12 @@ class Parcel(Agent):
         accesor function for parcel life span 
         '''
         return self._LIFESPAN
+   
+    def parcel_mass():
+        pass
+        
+    def parcel_volume():
+        pass        
     
     def step(self):
         '''

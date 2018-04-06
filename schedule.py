@@ -44,6 +44,7 @@ class RandomActivationByType(RandomActivation):
         self.agents.append(agent)
         agent_class = type(agent)
         self.agents_by_type[agent_class].append(agent)
+        
 
     def remove(self, agent):
         '''
@@ -80,6 +81,9 @@ class RandomActivationByType(RandomActivation):
         Args:
             breed: Class object of the breed to run.
         '''
+        
+        self.model.make_parcels()  # Generate the parcels for this step
+        
         agents = self.agents_by_type[type_]
         # TODO: change order of activation here
         random.shuffle(agents)

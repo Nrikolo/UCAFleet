@@ -6,8 +6,7 @@ Created on Fri Mar 16 21:49:52 2018
 """
 
 import numpy as np
-#TODO: this import should be placed in the model? 
-from queue import Queue
+
 from collections import deque, defaultdict
 from parcelqueue import ParcelQueue
 from mesa import Agent
@@ -25,6 +24,7 @@ class Airport(Agent):
     '''
     
     name_index = defaultdict(list)
+    
     def __init__(self, unique_id, model, name, pos, refueling_rate, pdf):
         '''
         Create a airport agent.
@@ -55,20 +55,16 @@ class Airport(Agent):
             self.parcel_queues.append(ParcelQueue(self.model,self.name, index))  # Create a parcel queue
         
         Airport.name_index[self.name].append(self)
-
+#        print ("")
+#        print (Airport.name_index)
         
     @classmethod
     def find_by_name(cls,name): 
         return Airport.name_index[name]
 
-
-    def store_uav(self,uavObj): 
-        '''
-        recieve a uav object and store it in the airport's FIFO queue 
-        '''
-        self.uav_queue.append(uavObj)
-        
-        
+# =============================================================================
+#     pseudo private methods   
+# =============================================================================
         
     def _load_uav(self,uavObj):
         '''
@@ -98,7 +94,12 @@ class Airport(Agent):
         # --The q with the highest average age (Priority = oldest_avg)
         pass
     
-    def _generate_parcels(self): 
+
+# =============================================================================
+# pseudo public methods
+# =============================================================================
+            
+    def generate_parcels(self): 
         '''
         generates parcels in the airport based on probability density function 
         '''
@@ -107,7 +108,15 @@ class Airport(Agent):
         # Iterate through all parcel queue objects and generate parcels
         for q in self.parcel_queues:
             q.generate_parcels()
-    
+            
+    def store_uav(self,uavObj): 
+        '''
+        recieve a uav object and store it in the airport's FIFO queue 
+        '''
+        print ("{} airport is queueing uav {}".format(self.name, uavObj.unique_id))
+        self.uav_queue.append(uavObj)
+        
+        
     def step(self):
         '''
         A step in the airports timeline. Refuling UAVs, Loading UAVs and Generating packages
@@ -115,7 +124,6 @@ class Airport(Agent):
         
         # UAVs are self refueling if their state allows it 
         
-        self._generate_parcels() 
         self._sort_parcel_queues()
         
         for uavObj in self.uav_queue: # Loop through the UAV Queue (FIFO) 

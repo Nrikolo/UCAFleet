@@ -116,10 +116,22 @@ class Fleet(Model):
             self.make_uavs(self._num_uav_per_airport,airport) #make a single uav at this airport
         
         
+    def make_parcels(self):
+        '''
+        Generate parcels (agents) within airport object
+        
+        Contrary to the make_uavs and make_airports methods, the make_parcels 
+        method gets called every step the model goes through
+        '''
+        
+        for a in self.schedule.agents_by_type[Airport]:
+            a.generate_parcels()      
+        
+       
+            
     def make_uavs(self, amount, airportObj):
         '''
-        Creates an amount of uavs (agents) witin airport object
-        
+        Creates an amount of uavs (agents) within airport object
         '''
         #Each airport will have an amount of uavs
         
@@ -136,6 +148,7 @@ class Fleet(Model):
         Create self.population agents, with airports and uavs
         '''
         self.make_airports()
+        self.make_parcels()
         #self.make_uavs() #TODO: decouple airport and UAV creation (TBD)
         
     
@@ -145,9 +158,9 @@ class Fleet(Model):
         the source airport name
         '''
         
-        random_airport_name = random.choice(self._airports).NAME
+        random_airport_name = random.choice(Airport.name_index)
         while (random_airport_name == source_name):
-            random_airport_name = random.choice(self._airports).NAME
+            random_airport_name = random.choice(self.name_index)
         return random_airport_name 
     
     def step(self):
