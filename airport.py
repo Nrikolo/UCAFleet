@@ -20,7 +20,8 @@ class Airport(Agent):
         Package PDF (probability density function)
         UAV Queue (FIFO queue) of UAV agents in that airport
         pos (x,y) in km
-        REFUELING_RATE in Liters/step 
+        REFUELING_RATE in Liters/step
+        Package storage 
     '''
     
     name_index = defaultdict(list)
@@ -47,6 +48,7 @@ class Airport(Agent):
 #        self.uav_queue = Queue()  # An empty queue for UAVs 
         self.uav_queue = deque()  # An empty queue for UAVs 
         self.parcel_queues = list()   
+        self.parcel_storage_queue = deque()  # An empty queue for storage of incoming parcels
         # Create a parcel queue for each of the OTHER airports in the model 
         # Assumes all airports are within range and a single flight is required to deliver a parcel
         for index,row in self.model._airports.iterrows():
@@ -79,8 +81,25 @@ class Airport(Agent):
             #iterate throught the queue of parcels for a specific destination
             shipment, shipment_mass = q.get_shipment(self, uavObj.MAX_PAYLOAD)
             uavObj.load(shipment, q.DESTINATION)
-        #return true if loaded 
-
+            # TODO: Make this more elegant, perhaps using a try-catch 
+            if uavObj.is_loaded(): 
+                return True
+            else: 
+                continue #  Continue to the next queue in the airport
+        
+    def _unload_uav(self,uavObj):
+        '''
+        
+        '''
+        # Store the incoming parcels to the airport storage queue
+        self.parcel_storage += uavObj.get_parcels()
+        
+        # TODO: depricate this line and implement an end of simulation aggregator
+        #Move them to model "aggragator"
+        self.model.parcel_aggregator += uavObj.get_parcels()
+        
+        # Unload the uav 
+        uavObj.unload()        
         
     def _sort_parcel_queues(self, priority=None):
         '''
@@ -114,6 +133,7 @@ class Airport(Agent):
         recieve a uav object and store it in the airport's FIFO queue 
         '''
         print ("{} airport is queueing uav {}".format(self.name, uavObj.unique_id))
+        
         self.uav_queue.append(uavObj)
         
         
@@ -130,9 +150,11 @@ class Airport(Agent):
             if uavObj.is_IDLE(): #verify it is idle and ready to load
                 print ("Attempting to load {}".format(uavObj.uniqe_id))
                 #Try and load it 
-                self._load_uav(uavObj)  # Loop though parcel's queues 
-            else: 
-                continue 
+                self._load_uav(uavObj)  
+            elif uavObj.is_REFUELING():
+                print ("Attempting to unload {}".format(uavObj.uniqe_id))
+                self._unload_uav(uavObj)
+            continue
             # If enough package exist for a destination, 
                 # load on that UAV
         

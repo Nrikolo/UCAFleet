@@ -17,7 +17,7 @@ class Uav(Agent):
     A UAV agent.
     The agent has three states:
         - ONROUTE: flying from source to destination 
-        - REFUEL: after landing, the turnaround time minimum, as if refueling
+        - REFUELING: after landing, the turnaround time minimum, as if refueling
         - IDLE: UAV is ready to transport but hasn't been issued a mission thus
             it is idle.
    
@@ -114,35 +114,37 @@ class Uav(Agent):
             self._payload = mass
         
         pass
-        
-    def _unload(self): 
-        '''
-        unloads uav parcels into a model level aggregator (for later introspection)
-        and clears the payload 
-        '''
-        #move them to model "aggragator"
-        self.model.parcel_aggregator += self.parcels
-    
-        self._parcels[:] = []  # Unload parcels by clearing the list of parcels on the uav      
-        self._update_payload() # Update the payload mass of the uav
             
     def _reached_destination(self):
         '''
         uav has reached its destination, function unloads UAV and changes its 
         state to refueling
         '''
-        #UAV has landed
-        # TODO: Include this uav in airport uav queue
-        #UAV is unloaded at destination
-        self._unload()
+        #UAV has reached destination and landed
+        
         #change state to refueling 
         self._STATE = 'REFUELING'
-    
-    def _set_destination(self, destination):
+        
+        # Set source to what was the destination 
+        self._set_source(self.destination_name)
+        
+        # Erase destination (will be filled by airport once uav is loaded)
+        self._set_destination(None)
+        
+        # Add UAV to airport uav_queue
+        Airport.find_by_name[self.destination_name][0].store_uav(self)
+        
+    def _set_destination(self, destination=None):
         '''
-        Sets destination of UAV based on the parcel queue used for loading it
+        Sets destination of UAV 
         '''
         self.destination_name = destination
+        
+    def _set_source(self, source):
+        '''
+        Sets source of UAV 
+        '''
+        self.source_name = source
 
 # =============================================================================
 # pseudo public methods 
@@ -151,9 +153,31 @@ class Uav(Agent):
     def is_IDLE(self):
         return self.get_state() is 'IDLE'
     
+    def is_REFUELING(self):
+        return self.get_state() is 'REFUELING'
+    
+    def is_ONROUTE(self):
+        return self.get_state() is 'ONROUTE'
+    
     def get_state(self): 
         return self._STATE
     
+    def is_loaded(self): 
+        return not self.get_parcels()
+        
+    def get_parcels(self): 
+        return self._parcels
+    
+    def unload(self): 
+        '''
+        unloads uav parcels into a model level aggregator (for later introspection)
+        and clears the payload 
+        '''
+    
+        self._parcels[:] = []  # Unload parcels by clearing the list of parcels on the uav      
+        self._update_payload() # Update the payload mass of the uav
+        
+        
     def load(self, shipment, destination, mass=None):
         '''
         loads uav with shiptment menifest and sets destination in packages and uav
@@ -167,18 +191,20 @@ class Uav(Agent):
         self._update_payload(mass)
         self._finished_loading()        
         
+        
     def try_loading(self): 
         '''
         returns true if loading was succesful and false otherwise 
         '''
-        
         return True
 
     def step(self):
         '''
         Get the UAV's state, compute the next action 
         '''
-        if self._STATE == 'ONROUTE':
+        print ("UAV {} is in state {}".format(self.unique_id,self.get_state()))
+        if self.is_ONROUTE:
+            print ("UAV {} is flying from {} to {}".format(self.source_name ,self.destination_name))
             #If uav is onroute to its destination, continue until reached
             
             ##TODO: can be done more efficiently if destination pose is stored? 
@@ -219,23 +245,20 @@ class Uav(Agent):
             self.model.space.move_agent(self, new_position)
             
 
-        if self._STATE == 'REFUEL':
+        if self.is_REFUELING():
             #If uav is refueling, continue until full
             
             if self.fuel < self.FUEL_CAPACITY:
                 #TODO: get the REFUELING_SPEED from the current airport 
                 #(self.SOURCE) the UAV is in
-                self.fuel += Airport.find_by_name[self.SOURCE][0].REFUELING_RATE
+                self.fuel += Airport.find_by_name[self.source_name][0].REFUELING_RATE
                 #https://stackoverflow.com/questions/10858575/find-object-by-its-member-inside-a-list-in-python
 #                self.fuel += 30
             else:
                 self._finished_refueling()
                 
-        #if self._STATE == 'IDLE' and self.try_loading(): 
-            # If loading is a passive activity of the UAV, 
-            # does it affect this state? 
             
-        if self._STATE == 'IDLE':
+        if self.is_IDLE():
             pass
             #Assumes that loading takes 1 step
             # TODO: consider adding a "LOADING" State for UAV if it is to take 

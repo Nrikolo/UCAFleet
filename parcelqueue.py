@@ -7,7 +7,6 @@ Created on Fri Mar 16 21:52:14 2018
 
 import random 
 import uuid 
-from queue import Queue
 from collections import deque 
 
 from parcel import Parcel 

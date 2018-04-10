@@ -87,6 +87,12 @@ class Fleet(Model):
         self.make_agents()
         #self.running = True
 
+    def get_airportObj(self, name):
+        '''
+        returns an airport object based on a name (str)
+        '''
+        return Airport.find_by_name(name)[0]
+        
     def get_steps_per_hour(self): 
         return self._steps_per_hour
     
