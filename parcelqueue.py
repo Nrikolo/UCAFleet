@@ -39,8 +39,8 @@ class ParcelQueue():
         '''
         #super().__init__(unique_id, model)
         self.model = model
-        self.SOURCE = source_name
-        self.DESTINATION = destination_name
+        self.source_name = source_name
+        self.destination_name = destination_name
         self.q = deque()
 
     def generate_parcels(self,number=1):
@@ -56,11 +56,11 @@ class ParcelQueue():
         for i in range(number):
             if random.random() > 0.2:
                 #TODO: modify to use pdf_params instead of hard coded value
-                print("Creating parcel in {} destined to {}".format(self.SOURCE, self.DESTINATION))
+                print("Creating parcel in {} destined to {}".format(self.source_name, self.destination_name))
                 p = Parcel(uuid.uuid4(),
                            self.model,
-                           self.SOURCE,
-                           self.DESTINATION)
+                           self.source_name,
+                           self.destination_name)
                 self.q.append(p)
                 self.model.schedule.add(p)
                 
@@ -69,44 +69,62 @@ class ParcelQueue():
         returns the number of parcels in the queue 
         '''
         return len(self.q)
-
-    def get_shipment(self, mass_limit): 
+    
+    def get_mass(self):
         '''
-        returns a list of parcels and their total mass [payload] for shipment that weigths no more than [mass_limit] and removed from queue 
+        returns the total mass of parcels in the queue 
+        '''
+        mass = 0
+        for i in range(self.get_size()): 
+#            print ("i=",i)
+            mass += self.q[i].MASS 
+        
+        return mass
+
+    def get_shipment(self, min_mass, mass_limit): 
+        '''
+        returns the number of parcels and their total mass [payload] for shipment 
+        that weigths no more than [mass_limit] from the begining of the queue
+        
         '''
         
         # TODO: change implementation to something more elegant.
-        # will be nicer once use collections.deque instead of queue.Queue 
         
-#        print ("This queue has {} parcels".format(self.get_size()))
-        shipment = list()
+        print ("This queue has {} parcels".format(self.get_size()))
         shipment_mass = 0.0
         shipment_size   = 0
-        for i in range(self.get_size_()): 
+        for i in range(self.get_size()): 
 #            print ("i=",i)
             temp = shipment_mass + self.q[i].MASS 
             if temp < mass_limit:
                 shipment_mass += self.q[i].MASS 
 #                print ("Added package number {}, whose weight is {}, shipment weight: {}".format(i, self.queue_.queue[i].WEIGHT, shipment_weight))
                 shipment_size += 1
+            
+        if shipment_mass < min_mass:
+            shipment_size, shipment_mass = 0 , 0.0 # Not enough payload to justify loading
         
-        print ("shipment size is {} parcels".format(shipment_size))
-        for i in range(shipment_size+1): 
-            shipment.append(self.q.popleft()) #Remove from queue and append to shipment
+        print ("This shipment has {} parcels weighing a total of {}".format(shipment_size,shipment_mass))
+
+        return shipment_size, shipment_mass
         
 #        print (shipment_weight)
 #        for i in xrange(4096):
 #            C.append(A.popleft())
 
 #        shipment = list(itertools.islice(self.queue_,0,last_item_to_take))
-        return shipment, shipment_mass
 
-    
-#    def step(self):
-#        '''
-#        Not sure this is best implemented as an agent. Might make more sense for 
-#        it to be a container class for parcel agents only. 
-#        '''
-#        pass
+    def remove_parcels(self,shipment_size):
+        '''
+        removes shipment_size number of parcels from the queue as they are loaded
+        onto a uav at the home airport
+        '''
+        shipment = list() 
+        print ("shipment size is {} parcels".format(shipment_size))
+        for i in range(shipment_size): 
+            shipment.append(self.q.popleft()) #Remove from queue and append to shipment
+            
+        return shipment
+
         
     

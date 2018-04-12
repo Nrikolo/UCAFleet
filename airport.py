@@ -70,17 +70,16 @@ class Airport(Agent):
         
     def _load_uav(self,uavObj):
         '''
-        #TODO: update dox for actual implementation
-        provide a list (or queue) of packages to be transported by calling uav
-        
+        Attempts to load a uav 
         If there are more than MIN_PAYLOAD packages for one destination 
         function will load (for now return) a list of packages
         '''
         
         for q in self.parcel_queues: 
             #iterate throught the queue of parcels for a specific destination
-            shipment, shipment_mass = q.get_shipment(self, uavObj.MAX_PAYLOAD)
-            uavObj.load(shipment, q.DESTINATION)
+            shipment_size, shipment_mass = q.get_shipment(self, uavObj.MAX_PAYLOAD)
+            if not shipment_size:
+                uavObj.load(q.remove_parcels(shipment_size), q.destination_name)
             # TODO: Make this more elegant, perhaps using a try-catch 
             if uavObj.is_loaded(): 
                 return True
@@ -143,15 +142,15 @@ class Airport(Agent):
         '''
         
         # UAVs are self refueling if their state allows it 
-        
         self._sort_parcel_queues()
-        
+        # Try and load IDLE uavs and unload refueling uavs
         for uavObj in self.uav_queue: # Loop through the UAV Queue (FIFO) 
             if uavObj.is_IDLE(): #verify it is idle and ready to load
                 print ("Attempting to load {}".format(uavObj.uniqe_id))
                 #Try and load it 
-                self._load_uav(uavObj)  
-            elif uavObj.is_REFUELING():
+                if self._load_uav(uavObj): # successful loading
+                    self.uav_queue.remove(uavObj) #remove from airport queue
+            elif uavObj.is_REFUELING() or uavObj.is_IDLE():
                 print ("Attempting to unload {}".format(uavObj.uniqe_id))
                 self._unload_uav(uavObj)
             continue

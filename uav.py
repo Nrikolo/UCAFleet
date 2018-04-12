@@ -170,8 +170,7 @@ class Uav(Agent):
     
     def unload(self): 
         '''
-        unloads uav parcels into a model level aggregator (for later introspection)
-        and clears the payload 
+        unloads uav parcels by deleting the parcels and updating the payload 
         '''
     
         self._parcels[:] = []  # Unload parcels by clearing the list of parcels on the uav      
@@ -183,20 +182,14 @@ class Uav(Agent):
         loads uav with shiptment menifest and sets destination in packages and uav
         '''
         #set transporter in all parcels in list 
-        
         for p in shipment:
-            p.set_transporter(self)
+            p.set_transporter(self) 
+        #TODO: what happens to the shipment if load wasn't succesful? 
         self._parcels = shipment    
         self._set_destination(destination)  # TODO: should be deduced from the shipment? 
         self._update_payload(mass)
         self._finished_loading()        
-        
-        
-    def try_loading(self): 
-        '''
-        returns true if loading was succesful and false otherwise 
-        '''
-        return True
+
 
     def step(self):
         '''
