@@ -57,7 +57,7 @@ model = Fleet(airports,
 #parcel_age = [parcel._LIFESPAN for a in model.schedule.agents]
 #plt.hist(parcel_age)
 #plt.show()
-
+print ("UNIT TESTING OUTPUT")
 mtl = model.get_airportObj('Montreal')
 mtl.parcel_queues[0].generate_parcels(5)
 mtl.parcel_queues[0].get_size()

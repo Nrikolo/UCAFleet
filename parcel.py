@@ -43,16 +43,17 @@ class Parcel(Agent):
         
         # "Public"
         self.type_ = 'parcel'
-        self.SOURCE = source_name
-        self.DESTINATION = destination_name
+        self.source_name = source_name
+        self.destination_name = destination_name
         #TODO: use random.choice(self.model.schedule.agents) 
         #would require implementing a custom scheduler with 2 types of agents
         #this would select a random agent (airport) from the list of available airports excluding the input 
         
-        self.MASS = 2.5 * np.random.randn() + 10
-        self.VOLUME = 2.1 * np.random.randn() + 1
+        self.MASS = round(2.5 * np.random.randn() + 10,2)
+        self.VOLUME = round(2.1 * np.random.randn() + 1,2)
         self.age = 0
-       
+        print("A parcel of mass {} kg and volume {} m^3 was instantiated in {} destined to {}".format(self.MASS, self.VOLUME, self.source_name, self.destination_name))
+
         
 # =============================================================================
 #     pseudo private methods

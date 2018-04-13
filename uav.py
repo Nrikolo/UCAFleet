@@ -44,7 +44,7 @@ class Uav(Agent):
     '''
     
     MAX_PAYLOAD   = 400 #kg
-    MIN_PAYLOAD   = 200 #kg
+    MIN_PAYLOAD   = 20 #kg
     SPEED         = 278 #kph
     MAX_RANGE     = 2300 #km
     FUEL_CAPACITY = 300 #Liters
@@ -68,7 +68,7 @@ class Uav(Agent):
         #"Private"
         self._parcels = list()
         self._payload = 0
-        self._odometer = 0
+        self._odometer = 0.0
         self._STATE = 'IDLE'
         #"Public"
         self.pos = airportObj.pos 
@@ -113,7 +113,6 @@ class Uav(Agent):
         else: 
             self._payload = mass
         
-        pass
             
     def _reached_destination(self):
         '''
@@ -131,8 +130,10 @@ class Uav(Agent):
         # Erase destination (will be filled by airport once uav is loaded)
         self._set_destination(None)
         
-        # Add UAV to airport uav_queue
-        Airport.find_by_name[self.destination_name][0].store_uav(self)
+        self.num_landings += 1  #UAV has landed once more
+        
+        # Add UAV to airport uav_queue with the new source name (where uav is now)
+        Airport.find_by_name(self.source_name)[0].store_uav(self)
         
     def _set_destination(self, destination=None):
         '''
@@ -163,7 +164,10 @@ class Uav(Agent):
         return self._STATE
     
     def is_loaded(self): 
-        return not self.get_parcels()
+        if self.get_parcels():
+            return True
+        else:
+            return False
         
     def get_parcels(self): 
         return self._parcels
@@ -173,7 +177,7 @@ class Uav(Agent):
         unloads uav parcels by deleting the parcels and updating the payload 
         '''
     
-        self._parcels[:] = []  # Unload parcels by clearing the list of parcels on the uav      
+        self._parcels = []  # Unload parcels by clearing the list of parcels on the uav      
         self._update_payload() # Update the payload mass of the uav
         
         
@@ -182,9 +186,10 @@ class Uav(Agent):
         loads uav with shiptment menifest and sets destination in packages and uav
         '''
         #set transporter in all parcels in list 
+        print ("In Load method of UAV {}, loading {} destined to {} ".format(self.unique_id, shipment, destination))
         for p in shipment:
             p.set_transporter(self) 
-        #TODO: what happens to the shipment if load wasn't succesful? 
+        #TODO: obtain the destination from the parcels and validate they are all destined to the same location
         self._parcels = shipment    
         self._set_destination(destination)  # TODO: should be deduced from the shipment? 
         self._update_payload(mass)
@@ -197,11 +202,14 @@ class Uav(Agent):
         '''
         print ("UAV {} is in state {}".format(self.unique_id,self.get_state()))
         if self.is_ONROUTE:
-            print ("UAV {} is flying from {} to {}".format(self.source_name ,self.destination_name))
+            print ("UAV {} is flying from {} to {}".format(self.unique_id, 
+                                                           self.source_name ,
+                                                           self.destination_name))
             #If uav is onroute to its destination, continue until reached
             
             ##TODO: can be done more efficiently if destination pose is stored? 
-            destination_pose = self.model.airports.loc[self.destination_name].values
+            destination_pose =  Airport.find_by_name(self.destination_name)[0].pos
+        
             #Distance to destination
             distance_to_destination = self.model.space.get_distance(self.pos,
                                                                     destination_pose )
@@ -218,15 +226,18 @@ class Uav(Agent):
                 #The translation vector             
                 error_vector = self.model.space.get_heading(self.pos,
                                                             destination_pose)
+                print ("error vector:", error_vector)
                 #Heading vector is obtained by normalizing (unit vector)
                 heading_vector = error_vector/ distance_to_destination     
+                print ("heading_vector :", heading_vector)
+
                 #Compute the new position by adding the translation vector to 
                 #the old position
                 new_position = self.pos + distance_per_step * heading_vector
                 #Add the distance traveled to the odometry
                 self._odometer += distance_per_step
                 #Decrement the fuel available on UAV 
-                self.fuel -= self.FUEL_CONSUMPTION / (self.model.getStepsPerHour())
+                self.fuel -= self.FUEL_CONSUMPTION / (self.model.get_steps_per_hour())
             else:
                 #Reached destination! 
                 new_position = destination_pose  # Set new position to be the destination

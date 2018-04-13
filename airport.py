@@ -45,10 +45,10 @@ class Airport(Agent):
         self.pos = np.array(pos)
         self.REFUELING_RATE = refueling_rate
         self.PDF = pdf
-#        self.uav_queue = Queue()  # An empty queue for UAVs 
         self.uav_queue = deque()  # An empty queue for UAVs 
-        self.parcel_queues = list()   
         self.parcel_storage_queue = deque()  # An empty queue for storage of incoming parcels
+        
+        self.parcel_queues = list()   
         # Create a parcel queue for each of the OTHER airports in the model 
         # Assumes all airports are within range and a single flight is required to deliver a parcel
         for index,row in self.model._airports.iterrows():
@@ -77,11 +77,13 @@ class Airport(Agent):
         
         for q in self.parcel_queues: 
             #iterate throught the queue of parcels for a specific destination
-            shipment_size, shipment_mass = q.get_shipment(self, uavObj.MAX_PAYLOAD)
+            shipment_size, shipment_mass = q.get_shipment(uavObj.MIN_PAYLOAD,
+                                                          uavObj.MAX_PAYLOAD)
             if not shipment_size:
                 uavObj.load(q.remove_parcels(shipment_size), q.destination_name)
             # TODO: Make this more elegant, perhaps using a try-catch 
             if uavObj.is_loaded(): 
+                print ("UAV {} is loaded".format(uavObj.unique_id))
                 return True
             else: 
                 continue #  Continue to the next queue in the airport
@@ -104,10 +106,12 @@ class Airport(Agent):
         '''
         sorts the airport's parcel queues based on criteria 
         '''
+        
         #TODO: decide on the order of priority to loop though the parcel queues 
         # in the airport. it would make sense that self.parcel_queues is sorted based on the criteria
         # Consider implementing one or all
         # --The q with the most packages (Priority = amount)
+        #https://stackoverflow.com/questions/30346356/how-to-sort-list-of-lists-according-to-length-of-sublists
         # --The q with the oldest package (Priority = oldest)
         # --The q with the highest average age (Priority = oldest_avg)
         pass
@@ -117,7 +121,7 @@ class Airport(Agent):
 # pseudo public methods
 # =============================================================================
             
-    def generate_parcels(self): 
+    def generate_parcels(self, number = 1): 
         '''
         generates parcels in the airport based on probability density function 
         '''
@@ -125,7 +129,7 @@ class Airport(Agent):
         
         # Iterate through all parcel queue objects and generate parcels
         for q in self.parcel_queues:
-            q.generate_parcels()
+            q.generate_parcels(number)
             
     def store_uav(self,uavObj): 
         '''
@@ -144,17 +148,17 @@ class Airport(Agent):
         # UAVs are self refueling if their state allows it 
         self._sort_parcel_queues()
         # Try and load IDLE uavs and unload refueling uavs
-        for uavObj in self.uav_queue: # Loop through the UAV Queue (FIFO) 
+        for uavObj in list(self.uav_queue): # Loop through the UAV Queue (FIFO) 
             if uavObj.is_IDLE(): #verify it is idle and ready to load
-                print ("Attempting to load {}".format(uavObj.uniqe_id))
+                print ("Attempting to load {}".format(uavObj.unique_id))
                 #Try and load it 
                 if self._load_uav(uavObj): # successful loading
-                    self.uav_queue.remove(uavObj) #remove from airport queue
-            elif uavObj.is_REFUELING() or uavObj.is_IDLE():
-                print ("Attempting to unload {}".format(uavObj.uniqe_id))
+                    print ("UAV {} was loaded succesfully at {}".format(uavObj.unique_id,self.name))
+                    #self.uav_queue.remove(uavObj) #remove from airport queue
+            elif ( uavObj.is_REFUELING() or uavObj.is_IDLE() and uavObj.is_loaded() ):
+                print ("Attempting to unload {}".format(uavObj.unique_id))
                 self._unload_uav(uavObj)
             continue
-            # If enough package exist for a destination, 
-                # load on that UAV
+
         
          

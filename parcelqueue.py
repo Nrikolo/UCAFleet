@@ -23,8 +23,8 @@ class ParcelQueue():
         model (:obj:'Fleet'): an instance of class 'Fleet' representing the model
         pdf_params (?): probability density function parameters for parcel generation
         queue_(deque) where all parcel objects are queued    
-        SOURCE (str): airport name where the parcel is from
-        DESTINATION (str): airport name where the parcel is destined to
+        source_name (str): airport name where the parcel is from
+        destination_name (str): airport name where the parcel is destined to
     '''
     
     def __init__(self, model, source_name, destination_name, pdf_params = None):
@@ -48,15 +48,14 @@ class ParcelQueue():
         generates parcels within the queue based on probability density function
         
         Note: 
-            FOR NOW implemented as 80% chance a parcel is created 
+            FOR NOW implemented as 100% chance a parcel is created 
 
         Args:
             number (int): the number of parcels to generate
         '''    
         for i in range(number):
-            if random.random() > 0.2:
+            if random.random() > 0.0:
                 #TODO: modify to use pdf_params instead of hard coded value
-                print("Creating parcel in {} destined to {}".format(self.source_name, self.destination_name))
                 p = Parcel(uuid.uuid4(),
                            self.model,
                            self.source_name,
@@ -81,18 +80,33 @@ class ParcelQueue():
         
         return mass
 
-    def get_shipment(self, min_mass, mass_limit): 
+    def get_avg_age(self): 
+        '''
+        returns the average age of parcels in the queue
+        '''
+        total_age = 0
+        for i in range(self.get_size()):
+            total_age += self.q[i].age
+        
+        return total_age / self.get_size()
+        
+    def get_shipment(self, min_mass=200, mass_limit=500): 
         '''
         returns the number of parcels and their total mass [payload] for shipment 
         that weigths no more than [mass_limit] from the begining of the queue
         
         '''
         
-        # TODO: change implementation to something more elegant.
-        
-        print ("This queue has {} parcels".format(self.get_size()))
         shipment_mass = 0.0
         shipment_size   = 0
+        
+        # TODO: change implementation to something more elegant.
+        
+        if self.get_mass() < min_mass :
+            return shipment_size, shipment_mass  # Not enough payload to justify loading
+            
+        print ("This queue has {} parcels".format(self.get_size()))
+        
         for i in range(self.get_size()): 
 #            print ("i=",i)
             temp = shipment_mass + self.q[i].MASS 
@@ -100,19 +114,10 @@ class ParcelQueue():
                 shipment_mass += self.q[i].MASS 
 #                print ("Added package number {}, whose weight is {}, shipment weight: {}".format(i, self.queue_.queue[i].WEIGHT, shipment_weight))
                 shipment_size += 1
-            
-        if shipment_mass < min_mass:
-            shipment_size, shipment_mass = 0 , 0.0 # Not enough payload to justify loading
-        
+      
         print ("This shipment has {} parcels weighing a total of {}".format(shipment_size,shipment_mass))
 
         return shipment_size, shipment_mass
-        
-#        print (shipment_weight)
-#        for i in xrange(4096):
-#            C.append(A.popleft())
-
-#        shipment = list(itertools.islice(self.queue_,0,last_item_to_take))
 
     def remove_parcels(self,shipment_size):
         '''
