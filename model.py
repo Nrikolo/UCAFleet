@@ -43,7 +43,6 @@ from schedule import RandomActivationByType
 
 from uav import Uav
 from airport import Airport
-from parcel import Parcel
 import uuid
 #Should the parcel be another type of agent? 
 #TODO: make consistent naming of functions and variables!!!! 
@@ -110,8 +109,8 @@ class Fleet(Model):
         #    print row['c1'], row['c2']
         #TODO have a type designation in agents 
         for index,row in self._airports.iterrows():
-            #print (row)
-            #print (row['x'])
+            #print(row)
+            #print(row['x'])
             airport = Airport(uuid.uuid4(),
                               self,
                               index, #The airport name
@@ -131,6 +130,7 @@ class Fleet(Model):
         '''
         
         for a in self.schedule.agents_by_type[Airport]:
+            print("in make_parcels, calling airport {}".format(a.name))
             a.generate_parcels()      
         
        
@@ -144,6 +144,7 @@ class Fleet(Model):
         
         for i in range(amount):    
             uav = Uav(uuid.uuid4(), self, airportObj)
+#            uav = Uav(i, self, airportObj)
             airportObj.store_uav(uav)
             self.space.place_agent(uav, airportObj.pos)
             self.schedule.add(uav)

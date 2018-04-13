@@ -49,10 +49,10 @@ class Parcel(Agent):
         #would require implementing a custom scheduler with 2 types of agents
         #this would select a random agent (airport) from the list of available airports excluding the input 
         
-        self.MASS = round(2.5 * np.random.randn() + 10,2)
-        self.VOLUME = round(2.1 * np.random.randn() + 1,2)
+        self.MASS = np.abs(round(10 * np.random.randn() + 10,2))
+        self.VOLUME = np.abs(round(0.1 * np.random.randn() + 0.5,2))
         self.age = 0
-        print("A parcel of mass {} kg and volume {} m^3 was instantiated in {} destined to {}".format(self.MASS, self.VOLUME, self.source_name, self.destination_name))
+#        print("A parcel of mass {} kg and volume {} m^3 was instantiated in {} destined to {}".format(self.MASS, self.VOLUME, self.source_name, self.destination_name))
 
         
 # =============================================================================

@@ -75,7 +75,7 @@ class ParcelQueue():
         '''
         mass = 0
         for i in range(self.get_size()): 
-#            print ("i=",i)
+#            print("i=",i)
             mass += self.q[i].MASS 
         
         return mass
@@ -105,17 +105,17 @@ class ParcelQueue():
         if self.get_mass() < min_mass :
             return shipment_size, shipment_mass  # Not enough payload to justify loading
             
-        print ("This queue has {} parcels".format(self.get_size()))
+        #print("This queue has {} parcels".format(self.get_size()))
         
         for i in range(self.get_size()): 
-#            print ("i=",i)
+#            print("i=",i)
             temp = shipment_mass + self.q[i].MASS 
             if temp < mass_limit:
                 shipment_mass += self.q[i].MASS 
-#                print ("Added package number {}, whose weight is {}, shipment weight: {}".format(i, self.queue_.queue[i].WEIGHT, shipment_weight))
+#                print("Added package number {}, whose weight is {}, shipment weight: {}".format(i, self.queue_.queue[i].WEIGHT, shipment_weight))
                 shipment_size += 1
       
-        print ("This shipment has {} parcels weighing a total of {}".format(shipment_size,shipment_mass))
+        #print("This shipment has {} parcels weighing a total of {}".format(shipment_size,shipment_mass))
 
         return shipment_size, shipment_mass
 
@@ -125,7 +125,7 @@ class ParcelQueue():
         onto a uav at the home airport
         '''
         shipment = list() 
-        print ("shipment size is {} parcels".format(shipment_size))
+        #print("shipment size is {} parcels".format(shipment_size))
         for i in range(shipment_size): 
             shipment.append(self.q.popleft()) #Remove from queue and append to shipment
             
