@@ -45,7 +45,7 @@ class Uav(Agent):
     
     MAX_PAYLOAD   = 400 #kg
     # TODO: change min payload to 200kg
-    MIN_PAYLOAD   = 20 #kg 
+    MIN_PAYLOAD   = 200 #kg 
     SPEED         = 278 #kph
     MAX_RANGE     = 2300 #km
     FUEL_CAPACITY = 300 #Liters
@@ -197,7 +197,7 @@ class Uav(Agent):
         loads uav with shiptment menifest and sets destination in packages and uav
         '''
         #set transporter in all parcels in list 
-        print("In Load method of UAV {}, loading {} destined to {} ".format(self.unique_id, shipment, destination))
+        print("\n In Load method of UAV {}, loading {} destined to {} ".format(self.unique_id, shipment, destination))
         for p in shipment:
             p.set_transporter(self) 
         #TODO: obtain the destination from the parcels and validate they are all destined to the same location
@@ -214,8 +214,8 @@ class Uav(Agent):
         print("In step method of UAV {}".format(self.unique_id))
         if self.is_ONROUTE():
             print("UAV {} is flying from {} to {}".format(self.unique_id, 
-                                                           self.source_name ,
-                                                           self.destination_name))
+                                                          self.source_name,
+                                                          self.destination_name))
 #            print("fuel :", self.fuel)
             #If uav is onroute to its destination, continue until reached
             

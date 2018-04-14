@@ -48,10 +48,10 @@ class Airport(Agent):
         self.pdf = pdf
         self.uav_queue = deque()  # An empty queue for UAVs 
         self.parcel_storage_queue = deque()  # An empty queue for storage of incoming parcels
-        self.parcel_queues = list()   
+        self.parcel_queues = list()
         # Create a parcel queue for each of the OTHER airports in the model 
         # Assumes all airports are within range and a single flight is required to deliver a parcel
-        for index, row in self.model._airports.iterrows():
+        for index,row in self.model._airports.iterrows():
             if index == self.name:  # Airport from the list is the same as being constructed 
                 continue 
             self.parcel_queues.append(ParcelQueue(self.model,
@@ -81,6 +81,7 @@ class Airport(Agent):
         '''
         
         for q in self.parcel_queues: 
+            print("Parcel queue destination is {}".format(q.destination_name))
             #iterate throught the queue of parcels for a specific destination
             shipment_size, shipment_mass = q.get_shipment(uav_obj.MIN_PAYLOAD,
                                                           uav_obj.MAX_PAYLOAD)
@@ -131,7 +132,8 @@ class Airport(Agent):
         '''
         
         #TODO: decide on the order of priority to loop though the parcel queues 
-        # in the airport. it would make sense that self.parcel_queues is sorted based on the criteria
+        # in the airport. it would make sense that self.parcel_queues is sorted based on 
+        # the criteria
         # Consider implementing one or all
         # --The q with the most packages (Priority = amount)
         #https://stackoverflow.com/questions/30346356/how-to-sort-list-of-lists-according-to-length-of-sublists
@@ -162,7 +164,7 @@ class Airport(Agent):
         '''
         if uav_obj in self.uav_queue:
             print("{} airport is removing uav {}".format(self.name, 
-                                                     uav_obj.unique_id))
+                                                         uav_obj.unique_id))
             self.uav_queue.remove(uav_obj)
             return True
         else:

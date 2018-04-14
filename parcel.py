@@ -79,9 +79,10 @@ class Parcel(Agent):
     def delivered(self): 
         '''
         upon arrival to destination, parcel is assumed delivered, its "destroyed" conceptually
-        by setting its _LIFE_SPAN to its current age. 
+        by setting its _LIFE_SPAN to its current age and removed from the model schedule.
         '''
         self._LIFESPAN = self.age
+        self.model.schedule.remove(self)
         
     def get_lifespan(self):
         '''
@@ -99,6 +100,7 @@ class Parcel(Agent):
         '''
         Implements the step method of the agent of type parcel by aging it one step.
         '''
+#        print("Aging parcel {}".format(self.unique_id))
         self._increment_age()
         
     

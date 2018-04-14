@@ -40,6 +40,7 @@ class ParcelQueue():
         #super().__init__(unique_id, model)
         self.model = model
         self.source_name = source_name
+        print("destination name: {}".format(destination_name))
         self.destination_name = destination_name
         self.q = deque()
 

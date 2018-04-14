@@ -10,6 +10,7 @@ import pandas as pd
 from model import Fleet
 
 
+
     
 #run.py 
 #is a Python script that will run the model when invoked as python run.py.
@@ -19,8 +20,8 @@ from model import Fleet
 
 #Specify the names and locations of the airports
 d = {'Name':['Toronto','Montreal'],
-     'x' : [0., 450.],
-     'y' : [0., 200.  ],
+     'x' : [0., 100.],
+     'y' : [0., 0.  ],
      'pdf_params' : [1,1], 
      'refueling_rate':[30,30]}
 #Convert to dataframe
@@ -39,7 +40,7 @@ num_uav_per_airport = int( total_num_uavs / len(airports))
 
 
 #Specify the amount of time (number of steps) the simulation is to run
-simlation_span = 10 
+simlation_span = 1000 
 #Each step is one minute!!!
 
 
@@ -49,19 +50,40 @@ model = Fleet(airports,
               width=500,
               height = 500)
 
-#for i in range(simlation_span):
-#    model.step()
+for i in range(simlation_span):
+    model.step()
 
 
 
 #parcel_age = [parcel._LIFESPAN for a in model.schedule.agents]
 #plt.hist(parcel_age)
 #plt.show()
-print ("UNIT TESTING OUTPUT")
+print ("UNIT TESTING OUTPUT---------------------------------------")
+#model.step()
 mtl = model.get_airportObj('Montreal')
-mtl.parcel_queues[0].generate_parcels(5)
-mtl.parcel_queues[0].get_size()
-mtl.parcel_queues[0].get_mass()
-mtl.parcel_queues[0].get_shipment(50,200)
+tor = model.get_airportObj('Toronto')
+from uav import Uav
+uavs = model.schedule.agents_by_type[Uav]
+#
+#
+#mtl.parcel_queues[0].generate_parcels(5)
+#mtl.parcel_queues[0].get_size()
+#mtl.parcel_queues[0].get_mass()
+#mtl.parcel_queues[0].get_shipment(50,200)
+#
+#uavObj = mtl.uav_queue[0]
+#uavObj.is_loaded()
+#print ("------------------")
+#mtl.step()
+#print ("------------------")
+#uavObj.step()
+#uavObj.step()
+#uavObj.step()
+#print ("------------------")
+#tor.uav_queue
 
-
+import matplotlib.pyplot as plt
+from parcel import Parcel
+parcel_age = [p.age for p in model.schedule.agents_by_type[Parcel]]
+plt.hist(parcel_age)
+plt.show()

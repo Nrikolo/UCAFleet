@@ -60,10 +60,10 @@ class RandomActivationByType(RandomActivation):
 
     def step(self, by_type=True):
         '''
-        Executes the step of each agent breed, one at a time, in random order.
+        Executes the step of each agent type, one at a time, in random order.
 
         Args:
-            by_breed: If True, run all agents of a single breed before running
+            by_type: If True, run all agents of a single type before running
                       the next one.
         '''
         if by_type:
@@ -76,14 +76,13 @@ class RandomActivationByType(RandomActivation):
 
     def step_type(self, type_):
         '''
-        Shuffle order and run all agents of a given breed.
+        Shuffle order and run all agents of a given type.
 
         Args:
-            breed: Class object of the breed to run.
+            type_: Class object of the type to run.
         '''
                 
         agents = self.agents_by_type[type_]
-        # TODO: change order of activation here
         random.shuffle(agents)
         for agent in agents:
             agent.step()
