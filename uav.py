@@ -166,26 +166,31 @@ class Uav(Agent):
 
     def is_IDLE(self):
         '''
+        checks if uav is idle, returns true if IDLE
         '''
         return self.get_state() is 'IDLE'
 
     def is_REFUELLING(self):
         '''
+        checks if uav is refuelling, returns true if REFUELLING
         '''
         return self.get_state() is 'REFUELLING'
 
     def is_ONROUTE(self):
         '''
+        checks if uav is onroute, returns true if ONROUTE
         '''
         return self.get_state() is 'ONROUTE'
 
     def get_state(self):
         '''
+        Accessor method to get the uav state
         '''
         return self._STATE
 
     def is_loaded(self):
         '''
+        checks if uav is loaded and returns true is so
         '''
         return bool(self.get_parcels())
 
@@ -194,13 +199,13 @@ class Uav(Agent):
         accessor for uav parcels
         '''
         return self._parcels
-    
+
     def get_payload_mass(self):
         '''
         accessor for uav payload
         '''
         return self._payload
-        
+
 
     def unload(self):
         '''
@@ -222,11 +227,11 @@ class Uav(Agent):
 #                                                                               destination))
         for p in shipment:
             p.set_transporter(self)
-        # TODO: obtain the destination from the parcels and validate they 
+        # TODO: obtain the destination from the parcels and validate they
         #are all destined to the same location
         self._parcels = shipment
         # TODO: should be deduced from the shipment?
-        self._set_destination(destination)  
+        self._set_destination(destination)
         self._update_payload(mass)
         self._finished_loading()
 
@@ -306,6 +311,6 @@ class Uav(Agent):
         if self.is_IDLE():
             #Assumes that loading takes 1 step
             print("[IDLE] UAV {} is at {} idle.".format(self.unique_id,
-                                                 self.source_name))
+                                                        self.source_name))
 
 

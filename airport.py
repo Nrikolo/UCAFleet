@@ -38,7 +38,7 @@ class Airport(Agent):
             refulling_rate:
             pdf:
         '''
-        print("[SPAWN] Creating an airport instance with " \
+        print("[SPAWN] Creating an airport instance with "\
               "id {} in {}".format(unique_id, name))
         super().__init__(unique_id, model)
         self.type_ = 'airport'
@@ -51,7 +51,7 @@ class Airport(Agent):
         self.parcel_queues = list()
         # Create a parcel queue for each of the OTHER airports in the model 
         # Assumes all airports are within range and a single flight is required to deliver a parcel
-        for index,row in self.model._airports.iterrows():
+        for index, row in self.model._airports.iterrows():
             if index == self.name:  # Airport from the list is the same as being constructed 
                 continue 
             self.parcel_queues.append(ParcelQueue(self.model,
@@ -140,7 +140,6 @@ class Airport(Agent):
         # --The q with the highest average age (Priority = oldest_avg)
         pass
     
-
 # =============================================================================
 # pseudo public methods
 # =============================================================================
