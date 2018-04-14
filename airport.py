@@ -38,8 +38,8 @@ class Airport(Agent):
             refulling_rate:
             pdf:
         '''
-        print("Creating an airport instance with id {} in {}".format(unique_id, 
-                                                                     name))
+        print("[SPAWN] Creating an airport instance with " \
+              "id {} in {}".format(unique_id, name))
         super().__init__(unique_id, model)
         self.type_ = 'airport'
         self.name = name
@@ -57,7 +57,6 @@ class Airport(Agent):
             self.parcel_queues.append(ParcelQueue(self.model,
                                                   self.name,
                                                   index))  # Create a parcel queue
-            
         Airport.name_index[self.name].append(self)
 #        print("")
 #        print(Airport.name_index)
@@ -81,7 +80,7 @@ class Airport(Agent):
         '''
         
         for q in self.parcel_queues: 
-            print("Parcel queue destination is {}".format(q.destination_name))
+#            print("Parcel queue destination is {}".format(q.destination_name))
             #iterate throught the queue of parcels for a specific destination
             shipment_size, shipment_mass = q.get_shipment(uav_obj.MIN_PAYLOAD,
                                                           uav_obj.MAX_PAYLOAD)
@@ -93,9 +92,9 @@ class Airport(Agent):
                              shipment_mass)
             # TODO: Make this more elegant, perhaps using a try-catch 
             if uav_obj.is_loaded(): 
-                print("UAV {} is loaded with {} parcels totaling {} kg ".format(uav_obj.unique_id,
-                                                                                shipment_size,
-                                                                                shipment_mass))
+#                print("UAV {} is loaded with {} parcels totaling {} kg ".format(uav_obj.unique_id,
+#                                                                                shipment_size,
+#                                                                                shipment_mass))
                 return True
             else: 
                 continue #  Continue to the next queue in the airport
@@ -108,8 +107,8 @@ class Airport(Agent):
         while removing them from the uav
         '''
         
-        print("Trying to unload {} parcels in _unload_uav stationed in {}".format(uav_obj.unique_id, 
-                                                                                  self.name))
+#        print("Trying to unload {} parcels in _unload_uav stationed in {}".format(uav_obj.unique_id, 
+#                                                                                  self.name))
 
         shipment = uav_obj.get_parcels()
         # Set the parcels life span 
@@ -163,7 +162,7 @@ class Airport(Agent):
         and returns True if succesful and false if this uav isn't in the airport queue
         '''
         if uav_obj in self.uav_queue:
-            print("{} airport is removing uav {}".format(self.name, 
+            print("[RELEASE] {} airport is removing uav {}".format(self.name, 
                                                          uav_obj.unique_id))
             self.uav_queue.remove(uav_obj)
             return True
@@ -175,7 +174,7 @@ class Airport(Agent):
         '''
         recieve a uav object and store it in the airport's FIFO queue 
         '''
-        print("{} airport is queueing uav {}".format(self.name, 
+        print("[STORE] {} airport is queueing uav {}".format(self.name, 
                                                      uav_obj.unique_id))
         
         self.uav_queue.append(uav_obj)
@@ -187,7 +186,7 @@ class Airport(Agent):
         
         Sorting parcels, Generating parcels,Refuling UAVs, Loading UAVs, Unloading UAVs
         '''
-        print("In airport {} step function".format(self.name))
+#        print("In airport {} step function".format(self.name))
         self._sort_parcel_queues()  # Prioritize the parcel queues 
         self.generate_parcels()  # Creating parcels at this airport
         
@@ -196,17 +195,22 @@ class Airport(Agent):
 #            print("UAV {} is in state {} ".format(uav_obj.unique_id, 
 #                                                  uav_obj.get_state()))
             if uav_obj.is_IDLE() and (not uav_obj.is_loaded()): #verify it is idle and ready to load
-                print("Attempting to load UAV {}".format(uav_obj.unique_id))
+#                print("Attempting to load UAV {}".format(uav_obj.unique_id))
                 #Try and load it 
-                if self._load_uav(uav_obj): # successful loading
-                    pass
-#                    print("UAV {} was loaded succesfully at {}".format(uav_obj.unique_id,
-#                                                                       self.name))
-                    #self.uav_queue.remove(uavObj) #remove from airport queue
+                if self._load_uav(uav_obj): 
+                    print("[LOADED] UAV {} was loaded succesfully at {} " \
+                          "with {:3d} parcels totalling {:.2f} kg ".format(uav_obj.unique_id,
+                                                                    self.name,
+                                                                    len(uav_obj.get_parcels()),
+                                                                    uav_obj.get_payload_mass()))
             elif (uav_obj.is_REFUELLING() and uav_obj.is_loaded()):
-                print("Attempting to unload {}".format(uav_obj.unique_id))
+#                print("Attempting to unload {}".format(uav_obj.unique_id))
                 self._unload_uav(uav_obj)
+                print("[UNLOADED] UAV {} was unloaded succesfully " \
+                      "at {}".format(uav_obj.unique_id, self.name))
             elif (uav_obj.is_REFUELLING() and not uav_obj.is_loaded()):
+#                print("[REFUELLING] UAV {} is refuelling at {}".format(uav_obj.unique_id,
+#                                                                     self.name))
                 pass # uav is refuelling, will increment fuel during its step method
             continue
 
