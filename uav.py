@@ -5,7 +5,7 @@ Created on Fri Mar 16 21:33:13 2018
 @author: Riko
 """
 
-#import numpy as np
+from flight import Flight
 from collections import defaultdict
 
 from mesa import Agent
@@ -77,7 +77,7 @@ class Uav(Agent):
         self.num_landings = 0
         self.destination_name = None
         self.fuel = self.FUEL_CAPACITY #instantiated with full tank of gas
-
+        self.logger = list() # A flight log book 
         Uav.name_index[self.unique_id].append(self)
 
 
@@ -146,7 +146,15 @@ class Uav(Agent):
                                                        self.destination_name))
         #change state to refuelling
         self._STATE = 'REFUELLING'
-
+        distance = self.model.space.get_distance(Airport.find_by_name(self.source_name)[0].pos,
+                                                 Airport.find_by_name(self.destination_name)[0].pos)
+        
+        self.logger.append(Flight(self.source_name,
+                                  self.destination_name, 
+                                  distance,
+                                  20,
+                                  self.get_payload_mass(),
+                                  self.FUEL_CAPACITY-self.fuel))
         # Set source to what was the destination
         self._set_source(self.destination_name)
 
@@ -154,7 +162,7 @@ class Uav(Agent):
         self._set_destination(None)
 
         self.num_landings += 1  #UAV has landed once more
-
+        
         # Add UAV to airport uav_queue with the new source name (where uav is now)
         Airport.find_by_name(self.source_name)[0].store_uav(self)
 

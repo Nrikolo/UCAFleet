@@ -5,14 +5,15 @@ Created on Sat Apr 14 18:00:30 2018
 @author: Riko
 """
 
-import sys, os 
+from contextlib import contextmanager
+import sys, os
 
-
-# Disable
-def blockPrint():
-    sys.stdout = open(os.devnull, 'w')
-
-# Restore
-def enablePrint():
-    sys.stdout = sys.__stdout__
-    
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:  
+            yield
+        finally:
+            sys.stdout = old_stdout
