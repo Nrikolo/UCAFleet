@@ -6,9 +6,9 @@ Created on Fri Mar 16 15:47:22 2018
 """
 
 import time
-import pandas as pd
 import auxfunctions
 from model import Fleet
+from input_data import airports, steps_per_hour
 
 # TODO: visualization of the fleet such that each airport is a node with  
 # a list of queues next to it. Each queue indicates the total number of parcels
@@ -41,35 +41,26 @@ from model import Fleet
 #is a Python script that will run the model when invoked as python run.py.
 #Similar to a main. 
 
-#Specify the names and locations of the airports
-d = {'Name': ['Toronto','Montreal','Ottawa'],
-     'x'   : [0.       , 400.     , 300. ],
-     'y'   : [0.       , 400.     , 400. ],
-     'pdf_params' : [1,1,1], 
-     'refuelling_rate':[10,10,10],
-     'num_uavs':[3,3,3]}
-#Convert to dataframe
-airports = pd.DataFrame(d)
-del d
-#Use 'Name' as index column
-airports.set_index('Name',drop=True, inplace=True)
-
 #Specify the amount of time in hours for the simulation to run
 simulation_time = 10 
 
-steps_per_hour = 60  # Each step is one minute!!!
 simlation_steps = simulation_time * steps_per_hour
+
+
+#from server import server
+#server.port = 8521 # The default
+#server.launch()
 
 start_time = time.time()  # Execution time counter start
 
-with auxfunctions.suppress_stdout():
-    model = Fleet(airports,
+#with auxfunctions.suppress_stdout():
+model = Fleet(airports,
                   steps_per_hour,
                   width=2000,
                   height = 2000)
 
-    for i in range(simlation_steps):
-        model.step()
+for i in range(simlation_steps):
+    model.step()
 
 
 end_time = time.time()  # Execution time counter start

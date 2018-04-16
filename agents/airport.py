@@ -11,7 +11,7 @@ import numpy as np
 
 from mesa import Agent
 
-from parcelqueue import ParcelQueue
+from agents.parcelqueue import ParcelQueue
 
 
 class Airport(Agent):

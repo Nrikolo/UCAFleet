@@ -35,8 +35,8 @@ from mesa import Model
 from mesa.space import ContinuousSpace
 from schedule import RandomActivationByType
 
-from uav import Uav
-from airport import Airport
+from agents.uav import Uav
+from agents.airport import Airport
 
 #Should the parcel be another type of agent?
 #TODO: make consistent naming of functions and variables!!!!
@@ -72,10 +72,10 @@ class Fleet(Model):
 #        self._number_of_uavs = self._num_uav_per_airport * len(airports)
         self._steps_per_hour = steps_per_hour
         self.schedule = RandomActivationByType(self)
-        self.space = ContinuousSpace(width, height, True)
+        self.space = ContinuousSpace(width, height, False)
         self.parcel_aggregator = list()
         self.make_agents()
-        #self.running = True
+        self.running = True
 
     def get_airport_obj(self, name):
         '''

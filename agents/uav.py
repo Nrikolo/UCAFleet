@@ -4,12 +4,12 @@ Created on Fri Mar 16 21:33:13 2018
 
 @author: Riko
 """
-
+import numpy as np
 from flight import Flight
 from collections import defaultdict
 
 from mesa import Agent
-from airport import Airport
+from agents.airport import Airport
 
 class Uav(Agent):
     '''
@@ -42,7 +42,7 @@ class Uav(Agent):
     '''
 
     MAX_PAYLOAD = 400 #kg
-    MIN_PAYLOAD = 200 #kg
+    MIN_PAYLOAD = 20 #kg
     SPEED = 278 #kph
     MAX_RANGE = 2300 #km
     FUEL_CAPACITY = 300 #Liters
@@ -72,6 +72,7 @@ class Uav(Agent):
         self._STATE = 'IDLE'
         #"Public"
         self.pos = airport_obj.pos
+        self.heading = np.array([0,0])
         self.type_ = 'uav'
         self.source_name = airport_obj.name
         self.num_landings = 0
@@ -269,7 +270,8 @@ class Uav(Agent):
             #If the distance left to reach destination is less than what the UAV
             #will cover in this step, it has reached the destination
 
-            #TODO: Make this section more elegant
+            # TODO: Make this section more elegant, some of which isn't needed 
+            # every step
             if distance_to_destination > distance_per_step:
                 #Haven't reached the destination, keep going...
 
@@ -278,12 +280,12 @@ class Uav(Agent):
                                                             destination_pose)
 #                print("error vector:", error_vector)
                 #Heading vector is obtained by normalizing (unit vector)
-                heading_vector = error_vector/ distance_to_destination
+                self.heading = error_vector/ distance_to_destination
 #                print("heading_vector :", heading_vector)
 
                 #Compute the new position by adding the translation vector to
                 #the old position
-                new_position = self.pos + distance_per_step * heading_vector
+                new_position = self.pos + distance_per_step * self.heading
 #                print("new_position :", new_position)
 
                 #Add the distance traveled to the odometry

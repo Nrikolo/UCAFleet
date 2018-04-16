@@ -9,7 +9,7 @@ import random
 import uuid
 from collections import deque
 
-from parcel import Parcel
+from agents.parcel import Parcel
 
 class ParcelQueue():
     '''
