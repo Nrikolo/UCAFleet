@@ -11,9 +11,6 @@ from agents.airport import Airport
 from agents.uav import Uav
 from agents.parcel import Parcel
 
-
-#from parcel import Parcel
-
 class SimpleCanvas(VisualizationElement):
     local_includes = ["simple_continuous_canvas.js"]
     portrayal_method = None
