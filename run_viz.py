@@ -33,10 +33,7 @@ Created on Fri Mar 16 15:47:22 2018
 # TODO: visualization should be only done for airports and uavs agent types , 
 # would probably require a null function for portrayal of parcels
 
-
 #run.py 
-
-
 from server import server
 server.port = 8521 # The default   
 server.launch()

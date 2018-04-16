@@ -90,7 +90,6 @@ class Airport(Agent):
                 uav_obj.load(q.remove_parcels(shipment_size),
                              q.destination_name,
                              shipment_mass)
-            # TODO: Make this more elegant, perhaps using a try-catch 
             if uav_obj.is_loaded(): 
 #                print("UAV {} is loaded with {} parcels totaling {} kg ".format(uav_obj.unique_id,
 #                                                                                shipment_size,
@@ -118,7 +117,6 @@ class Airport(Agent):
         # Store the incoming parcels to the airport storage queue
         self.parcel_storage_queue += shipment
         
-        # TODO: depricate this line and implement an end of simulation aggregator
         #Move them to model "aggragator"
         self.model.parcel_aggregator += shipment
         

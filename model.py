@@ -38,10 +38,6 @@ from schedule import RandomActivationByType
 from agents.uav import Uav
 from agents.airport import Airport
 
-#Should the parcel be another type of agent?
-#TODO: make consistent naming of functions and variables!!!!
-
-
 class Fleet(Model):
     '''
     Fleet model class. Handles agent creation, placement and scheduling.
@@ -102,12 +98,7 @@ class Fleet(Model):
         for the airports within the Fleet region of operation (model)
         '''
 
-        #for index, row in df.iterrows():
-        #    print row['c1'], row['c2']
-        #TODO have a type designation in agents
         for index, row in self._airports.iterrows():
-            #print(row)
-            #print(row['x'])
             airport = Airport(uuid.uuid4(),
                               self,
                               index,#The airport name
@@ -138,7 +129,6 @@ class Fleet(Model):
         '''
         #Each airport will have an amount of uavs
 
-
         for i in range(amount):
             uav = Uav(uuid.uuid4(), self, airport_obj)
 #            uav = Uav(i, self, airportObj)
@@ -153,8 +143,7 @@ class Fleet(Model):
         '''
         self.make_airports()
         self.make_parcels()
-        #self.make_uavs() #TODO: decouple airport and UAV creation (TBD)
-
+        
 
     def get_random_destination_airport(self, source_name=None):
         '''

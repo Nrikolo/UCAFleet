@@ -62,14 +62,13 @@ class Uav(Agent):
               "airport {}".format(unique_id, airport_obj.name))
         super().__init__(unique_id, model)
 
-        # TODO: Figure out if this is redundent
-        # since space.place_agent() sets the agent position already
         #"Private"
         self._parcels = list()
         self._payload = 0
         self._odometer = 0.0  # km
         self._tfh = 0.0  # hours
         self._STATE = 'IDLE'
+        self._flight_steps_duration = 0
         #"Public"
         self.pos = airport_obj.pos
         self.heading = np.array([0,0])
@@ -79,6 +78,7 @@ class Uav(Agent):
         self.destination_name = None
         self.fuel = self.FUEL_CAPACITY #instantiated with full tank of gas
         self.logger = list() # A flight log book 
+        
         Uav.name_index[self.unique_id].append(self)
 
 
@@ -123,6 +123,10 @@ class Uav(Agent):
         self._STATE = 'ONROUTE' # Since uav finished loading, it should be ready for takeoff
         # Remove this uav from the airport's queue
         Airport.find_by_name(self.source_name)[0].release_uav(self)
+        print("[ONROUTE] UAV {} is flying from {} to {}".format(self.unique_id,
+                                                                self.source_name,
+                                                                self.destination_name))
+#           
 
 
     def _update_payload(self, mass=None):
@@ -149,11 +153,11 @@ class Uav(Agent):
         self._STATE = 'REFUELLING'
         distance = self.model.space.get_distance(Airport.find_by_name(self.source_name)[0].pos,
                                                  Airport.find_by_name(self.destination_name)[0].pos)
-        
+        # TODO: compute the flight duration and update the logger
         self.logger.append(Flight(self.source_name,
                                   self.destination_name, 
                                   distance,
-                                  20,
+                                  self._flight_steps_duration / self.model.get_steps_per_hour(),
                                   self.get_payload_mass(),
                                   self.FUEL_CAPACITY-self.fuel))
         # Set source to what was the destination
@@ -163,11 +167,9 @@ class Uav(Agent):
         self._set_destination(None)
 
         self.num_landings += 1  #UAV has landed once more
-        
+        self._flight_steps_duration = 0 # Reset flight time counter 
         # Add UAV to airport uav_queue with the new source name (where uav is now)
         Airport.find_by_name(self.source_name)[0].store_uav(self)
-
-
 
 # =============================================================================
 # pseudo public methods
@@ -220,7 +222,6 @@ class Uav(Agent):
         '''
         unloads uav parcels by deleting the parcels and updating the payload
         '''
-
         self._parcels = []  # Unload parcels by clearing the list of parcels on the uav
         self._update_payload() # Update the payload mass of the uav
         print("{} unloaded, no parcels onboard".format(self.unique_id))
@@ -239,7 +240,6 @@ class Uav(Agent):
         # TODO: obtain the destination from the parcels and validate they
         #are all destined to the same location
         self._parcels = shipment
-        # TODO: should be deduced from the shipment?
         self._set_destination(destination)
         self._update_payload(mass)
         self._finished_loading()
@@ -249,20 +249,17 @@ class Uav(Agent):
         '''
         Get the UAV's state, compute the next action
         '''
-#        print("In step method of UAV {}".format(self.unique_id))
         if self.is_ONROUTE():
-            print("[ONROUTE] UAV {} is flying from {} to {}".format(self.unique_id,
-                                                                    self.source_name,
-                                                                    self.destination_name))
-#            print("fuel :", self.fuel)
+            self._flight_steps_duration += 1 
+#            print("[ONROUTE] UAV {} is flying from {} to {}".format(self.unique_id,
+#                                                                    self.source_name,
+#                                                                    self.destination_name))
+
             #If uav is onroute to its destination, continue until reached
-            ##TODO: can be done more efficiently if destination pose is stored?
             destination_pose = Airport.find_by_name(self.destination_name)[0].pos
-#            print("destination_pose :", destination_pose)
             #Distance to destination
             distance_to_destination = self.model.space.get_distance(self.pos,
                                                                     destination_pose)
-#            print("distance_to_destination :", distance_to_destination)
 
             #TODO: might make sense to have this as an attribute since its not changing
             distance_per_step = self.SPEED/(self.model.get_steps_per_hour())
@@ -270,27 +267,22 @@ class Uav(Agent):
             #If the distance left to reach destination is less than what the UAV
             #will cover in this step, it has reached the destination
 
-            # TODO: Make this section more elegant, some of which isn't needed 
-            # every step
             if distance_to_destination > distance_per_step:
                 #Haven't reached the destination, keep going...
 
                 #The translation vector
                 error_vector = self.model.space.get_heading(self.pos,
                                                             destination_pose)
-#                print("error vector:", error_vector)
                 #Heading vector is obtained by normalizing (unit vector)
                 self.heading = error_vector/ distance_to_destination
-#                print("heading_vector :", heading_vector)
 
                 #Compute the new position by adding the translation vector to
                 #the old position
                 new_position = self.pos + distance_per_step * self.heading
-#                print("new_position :", new_position)
-
+                
                 #Add the distance traveled to the odometry
                 self._odometer += distance_per_step
-#                print("self._odometer: ",self._odometer)
+                
                 #Decrement the fuel available on UAV
                 self.fuel -= self.FUEL_CONSUMPTION / (self.model.get_steps_per_hour())
             else:
@@ -313,7 +305,6 @@ class Uav(Agent):
                                                         self.fuel))
             if self.fuel < self.FUEL_CAPACITY:
                 self.fuel += Airport.find_by_name(self.source_name)[0].refuelling_rate
-                #https://stackoverflow.com/questions/10858575/find-object-by-its-member-inside-a-list-in-python
             else:
                 self._finished_refuelling()
             return
@@ -322,5 +313,3 @@ class Uav(Agent):
             #Assumes that loading takes 1 step
             print("[IDLE] UAV {} is at {} idle.".format(self.unique_id,
                                                         self.source_name))
-
-

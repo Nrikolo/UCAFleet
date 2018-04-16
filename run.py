@@ -9,7 +9,7 @@ import time
 import auxfunctions
 from model import Fleet
 from input_data import airports, steps_per_hour
-
+from graph_function import graph_function
 # TODO: visualization of the fleet such that each airport is a node with  
 # a list of queues next to it. Each queue indicates the total number of parcels
 # in it, oldest and average age
@@ -43,55 +43,18 @@ from input_data import airports, steps_per_hour
 
 #Specify the amount of time in hours for the simulation to run
 simulation_time = 10 
-
 simlation_steps = simulation_time * steps_per_hour
 
-
-#from server import server
-#server.port = 8521 # The default
-#server.launch()
-
 start_time = time.time()  # Execution time counter start
-
 #with auxfunctions.suppress_stdout():
 model = Fleet(airports,
                   steps_per_hour,
                   width=2000,
                   height = 2000)
-
 for i in range(simlation_steps):
     model.step()
-
 
 end_time = time.time()  # Execution time counter start
 execution_time = end_time - start_time
 
-print ("UNIT TESTING OUTPUT---------------------------------------")
-#model.step()
-#mtl = model.get_airport_obj('Montreal')
-#tor = model.get_airport_obj('Toronto')
-#from uav import Uav
-#uavs = model.schedule.agents_by_type[Uav]
-
-
-print ("GRAPHS---------------------------------------")
-import matplotlib.pyplot as plt
-from parcel import Parcel
-parcel_age = [p.age / steps_per_hour for p in model.schedule.agents_by_type[Parcel]]
-plt.hist(parcel_age)
-plt.show()
-print("This simulation was running for {} hours and ran for {:.2f}sec \n" \
-      "During which {} parcels were generated, {} were " \
-      "delivered, {:.2f} % ".format(model.schedule.steps / model.get_steps_per_hour(),
-                                    execution_time,
-                                    len(parcel_age),
-                                    len(model.parcel_aggregator),
-                                    100*len(model.parcel_aggregator) / len(parcel_age)))
-
-from uav import Uav
-TFH = [u._tfh for u in model.schedule.agents_by_type[Uav]]
-utilization = [x / simulation_time*100 for x in TFH]
-plt.hist(utilization)
-plt.show()
-
-
+graph_function(model, simulation_time, execution_time)
