@@ -50,13 +50,13 @@ class ParcelQueue():
         generates parcels within the queue based on probability density function
 
         Note:
-            FOR NOW implemented as 100% chance a parcel is created
+            FOR NOW implemented as 20% chance a parcel is created
 
         Args:
             number (int): the number of parcels to generate
         '''
         for i in range(number):
-            if random.random() > 0.0:
+            if random.random() > 0.2:
                 #TODO: modify to use pdf_params instead of hard coded value
                 p = Parcel(uuid.uuid4(),
                            self.model,

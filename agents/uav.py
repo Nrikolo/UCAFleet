@@ -211,9 +211,16 @@ class Uav(Agent):
         '''
         return self._parcels
 
+    
+    def get_payload_qty(self):
+        '''
+        accessor for uav payload qty
+        '''
+        return len(self._parcels)
+    
     def get_payload_mass(self):
         '''
-        accessor for uav payload
+        accessor for uav payload mass
         '''
         return self._payload
 

@@ -15,21 +15,26 @@ def agent_portrayal(agent):
     portrayal = {}
 
     if type(agent) is Airport:
-        print(agent)
-        return {"Shape": "circle",
+        return {"Shape": "airport",
                 "r": 4,
                 "Filled": "true",
                 "Color": "#00FF00",
-                "Layer": 1,
-                "text": agent.name,
+                "Layer": 0,
+                "name": agent.name,
+                "num": agent.get_number_parcels(),
                 "text_color": "black"}
     elif type(agent) is Uav:        
-        return {"Shape": "circle",
+        return {"Shape": "uav",
                 "r": 2,
                 "Filled": "true",
                 "Color": "Red",
                 "Layer": 2,
-                "text": round(agent.fuel, 1),
+                "name": agent.unique_id.hex[-5:],
+                "fuel": round(agent.fuel, 1),
+                "payload_mass":round(agent.get_payload_mass(),1), 
+                "payload_qty":agent.get_payload_qty(), 
+                "src": agent.source_name,
+                "dest": agent.destination_name,
                 "text_color": "black"}
     elif type(agent) is Parcel:
         pass

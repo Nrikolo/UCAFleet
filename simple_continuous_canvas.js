@@ -2,19 +2,21 @@ var ContinuousVisualization = function(height, width, context) {
 	var height = height;
 	var width = width;
 	var context = context;
+	var fontArgs = context.font.split(' ');
+	var fontSize = fontArgs[0];
 
 	this.draw = function(objects) {
 		for (var i in objects) {
 			var p = objects[i];
-			if (p.Shape == "rect")
-				this.drawRectange(p.x, p.y, p.w, p.h, p.Color, p.Filled);
-			if (p.Shape == "circle")
-				this.drawCircle(p.x, p.y, p.r, p.Color, p.Filled, p.text, p.text_color);
-		};
+			if (p.Shape == "airport")
+				this.drawAirport(p.x, p.y, p.r, p.Color, p.Filled, p.name, p.num, p.text_color);
+			if (p.Shape == "uav")
+				this.drawUAV(p.x, p.y, p.r, p.Color, p.Filled, p.name, p.payload_mass, p.payload_qty, p.fuel, p.src, p.dest, p.text_color);
+		};		
 
 	};
 
-	this.drawCircle = function(x, y, radius, color, fill, text, text_color) {
+	this.drawUAV = function(x, y, radius, color, fill, name, payload_mass, payload_qty, fuel, src, dest, text_color) {
 		var cx = x * width;
 		var cy = y * height;
 		var r = radius;
@@ -31,15 +33,47 @@ var ContinuousVisualization = function(height, width, context) {
 			context.fill();
 		}
 		// This part draws the text inside the Circle
-      if (text !== undefined) {
+      if (name !== undefined) {
           context.fillStyle = text_color;
           context.textAlign = 'start';
           context.textBaseline= 'hanging';
-          context.fillText(text, cx, cy);
+          context.fillText('UAV: ' + name, cx, cy);
+          context.fillText('Payload Mass: ' + payload_mass, cx , cy+10);
+          context.fillText('Payload Qty: ' + payload_qty, cx , cy+20);
+          context.fillText('Fuel: ' + fuel, cx , cy+30);
+          context.fillText('Src: ' + src , cx , cy+40);
+          context.fillText('Dest: ' + dest , cx , cy+50);
 
     	};
     };
 
+this.drawAirport = function(x, y, radius, color, fill, name, num, text_color) {
+		var cx = x * width;
+		var cy = y * height;
+		var r = radius;
+
+		context.beginPath();
+		context.arc(cx, cy, r, 0, Math.PI * 2, false);
+		context.closePath();
+
+		context.strokeStyle = color;
+		context.stroke();
+
+		if (fill) {
+			context.fillStyle = color;
+			context.fill();
+		}
+		// This part draws the text 
+      if (name !== undefined) {
+          context.fillStyle = text_color;
+          context.textAlign = 'start';
+          context.textBaseline= 'hanging';
+          context.fillText(name, cx, cy);
+          context.fillText('Parcels:' + num, cx , cy+10);
+
+    	};
+    };
+    
 	this.drawRectange = function(x, y, w, h, color, fill) {
 		context.beginPath();
 		var dx = w * width;
