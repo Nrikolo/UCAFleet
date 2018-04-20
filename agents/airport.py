@@ -166,6 +166,13 @@ class Airport(Agent):
         else:
             return False
         
+    
+    def get_number_parcels(self): 
+        '''
+        returns the total number of parcels meant to be shipped out of this airport now
+        '''
+        return sum(q.get_size() for q in self.parcel_queues)
+        
         
     def store_uav(self, uav_obj): 
         '''
