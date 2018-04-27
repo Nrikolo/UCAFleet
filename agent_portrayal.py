@@ -8,6 +8,21 @@ from agents.uav import Uav
 from agents.airport import Airport
 from agents.parcel import Parcel
 
+import json
+
+def convert(list_of_queues): 
+    '''
+    functions converts the parcel queue within an airport to a dict and then to json
+    '''
+    d = {}
+    for i in list_of_queues: 
+        d[i.destination_name] = i.get_size() #, i.get_avg_age())
+#        print("[CONVERT] converting in airport {} to json from {} with {} parcels:".format(i.source_name, i.destination_name, i.get_size()))
+#    print ("---------------")    
+    return json.dumps(d)
+    
+#convert(agent.parcel_queues)
+    
 def agent_portrayal(agent):
     if agent is None:
         return
@@ -21,7 +36,7 @@ def agent_portrayal(agent):
                 "Color": "#00FF00",
                 "Layer": 0,
                 "name": agent.name,
-                "num": agent.get_number_parcels(),
+                "queues": convert(agent.parcel_queues),
                 "text_color": "black"}
     elif type(agent) is Uav:        
         return {"Shape": "uav",
@@ -29,7 +44,7 @@ def agent_portrayal(agent):
                 "Filled": "true",
                 "Color": "Red",
                 "Layer": 2,
-                "name": agent.unique_id.hex[-5:],
+                "name": agent.unique_id.hex[-5:], #present only the last 5 bytes
                 "fuel": round(agent.fuel, 1),
                 "payload_mass":round(agent.get_payload_mass(),1), 
                 "payload_qty":agent.get_payload_qty(), 

@@ -40,10 +40,12 @@ from agents.airport import Airport
 
 class Fleet(Model):
     '''
-    Fleet model class. Handles agent creation, placement and scheduling.
-    Attributes:
-        Airports : a dictionary of name (string) and position (x,y) in km
-        UAVs: Define number of UAVs in model and their initial spawning
+    Fleet model class. Handles agent creation, placement and scheduling. \n
+    
+    Attributes: |br|
+        
+        Airports : a dictionary of name (string),  position (x,y) in km, parcel 
+            generation parameters, refuelling rate and number of UAVs
         width, height: should be derived from airport locations, of the space
         steps_per_hour: the number of steps per hour unit of time (60 means the
             step size is one minute)

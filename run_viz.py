@@ -35,7 +35,7 @@ Created on Fri Mar 16 15:47:22 2018
 
 #run.py 
 from server import server
-server.port = 8522 # The default   
+server.port = 8535 # The default   
 server.launch()
 
 

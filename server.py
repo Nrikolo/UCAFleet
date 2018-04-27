@@ -16,8 +16,8 @@ from agent_portrayal import agent_portrayal
 
 from input_data import airports, steps_per_hour
 
-width = airports['x'].max() + 20.
-height = airports['y'].max() + 20.
+width = airports['x'].max() + 100.
+height = airports['y'].max() + 100.
 
 fleet_canvas = SimpleCanvas(agent_portrayal, width, height)
 

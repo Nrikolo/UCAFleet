@@ -82,6 +82,17 @@ class ParcelQueue():
 
         return mass
 
+    def get_max_age(self):
+        '''
+        returns the maximum age of parcels in the queue (the age of the oldest)
+        '''
+        max_age = 0
+        for i in range(self.get_size()):
+            if max_age < self.q[i].age:
+                max_age = self.q[i].age
+
+        return max_age
+    
     def get_avg_age(self):
         '''
         returns the average age of parcels in the queue
@@ -90,7 +101,7 @@ class ParcelQueue():
         for i in range(self.get_size()):
             total_age += self.q[i].age
 
-        return total_age / self.get_size()
+        return 0 if not(self.get_size()) else total_age / self.get_size()
 
     def get_shipment(self, min_mass=200, mass_limit=500):
         '''
