@@ -166,6 +166,14 @@ class Airport(Agent):
         else:
             return False
         
+    def get_queues_as_dict(self):
+        '''
+        functions converts the parcel queue within an airport to a dict and then to json
+        '''
+        d = {}
+        for i in self.parcel_queues: 
+            d[i.destination_name] = (i.get_size(),  round(i.get_avg_age() / self.model.get_steps_per_hour(),1))
+        return d
     
     def get_number_parcels(self): 
         '''
@@ -190,6 +198,8 @@ class Airport(Agent):
         
         Sorting parcels, Generating parcels,Refuling UAVs, Loading UAVs, Unloading UAVs
         '''
+        # TODO: Change so that only one loading and sending a UAV can happen in a single step 
+        # (generalize and convert to time window, i.e takeoff possible every T minutes 
 #        print("In airport {} step function".format(self.name))
         self._sort_parcel_queues()  # Prioritize the parcel queues 
         self.generate_parcels()  # Creating parcels at this airport

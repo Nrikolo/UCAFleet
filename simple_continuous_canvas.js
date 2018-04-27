@@ -72,11 +72,12 @@ var ContinuousVisualization = function(height, width, context) {
             context.textAlign = 'start';
             context.textBaseline= 'hanging';
             context.fillText(name, cx, cy);
-            context.fillText('Parcels:', cx , cy+10);
+            context.fillText('Parcels To:', cx , cy+10);
             var i=0;
             for (var key in json_queues){
                 if (json_queues.hasOwnProperty(key)) {
-                    context.fillText(" To " + key + ": " + json_queues[key], cx , cy+i*10+20);
+                    //context.fillText(" To " + key + ": " + json_queues[key] , cx , cy+i*10+20);
+                    context.fillText("-" + key + ": " + json_queues[key][0] + ", Avg Age [hr]: " +json_queues[key][1] , cx+2 , cy+i*10+20);
                     i++;
                 };
             };

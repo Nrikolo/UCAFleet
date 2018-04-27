@@ -6,10 +6,6 @@ Created on Fri Mar 16 15:47:22 2018
 """
 
 
-# TODO: visualization of the fleet such that each airport is a node with  
-# a list of queues next to it. Each queue indicates the total number of parcels
-# in it, oldest and average age
-
 # TODO: include a flight log for each uav. Flight log would hold a list of 
 # flights conducted by uav, each with 
 # {source, destination, distance, duration, payload, fuel}
@@ -35,7 +31,7 @@ Created on Fri Mar 16 15:47:22 2018
 
 #run.py 
 from server import server
-server.port = 8535 # The default   
+server.port = 8528 # The default   
 server.launch()
 
 

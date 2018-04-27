@@ -16,7 +16,7 @@ def convert(list_of_queues):
     '''
     d = {}
     for i in list_of_queues: 
-        d[i.destination_name] = i.get_size() #, i.get_avg_age())
+        d[i.destination_name] = (i.get_size(),  round(i.get_avg_age(),1))
 #        print("[CONVERT] converting in airport {} to json from {} with {} parcels:".format(i.source_name, i.destination_name, i.get_size()))
 #    print ("---------------")    
     return json.dumps(d)
@@ -36,7 +36,7 @@ def agent_portrayal(agent):
                 "Color": "#00FF00",
                 "Layer": 0,
                 "name": agent.name,
-                "queues": convert(agent.parcel_queues),
+                "queues": json.dumps(agent.get_queues_as_dict()),
                 "text_color": "black"}
     elif type(agent) is Uav:        
         return {"Shape": "uav",
