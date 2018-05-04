@@ -168,11 +168,13 @@ class Airport(Agent):
         
     def get_queues_as_dict(self):
         '''
-        functions converts the parcel queue within an airport to a dict and then to json
+        functions converts the parcel queue within an airport to a dict
         '''
         d = {}
         for i in self.parcel_queues: 
-            d[i.destination_name] = (i.get_size(),  round(i.get_avg_age() / self.model.get_steps_per_hour(),1))
+            d[i.destination_name] = (i.get_size(),
+                                     round(i.get_avg_age() / self.model.get_steps_per_hour(),1),
+                                     round(i.get_max_age() / self.model.get_steps_per_hour(),1))
         return d
     
     def get_number_parcels(self): 

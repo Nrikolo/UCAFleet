@@ -77,7 +77,9 @@ var ContinuousVisualization = function(height, width, context) {
             for (var key in json_queues){
                 if (json_queues.hasOwnProperty(key)) {
                     //context.fillText(" To " + key + ": " + json_queues[key] , cx , cy+i*10+20);
-                    context.fillText("-" + key + ": " + json_queues[key][0] + ", Avg Age [hr]: " +json_queues[key][1] , cx+2 , cy+i*10+20);
+                    context.fillText("-" + key + ": " + json_queues[key][0] 
+                            + " / Avg Age [hr]: " + json_queues[key][1]
+                            + " / Oldest [hr]: " + json_queues[key][2], cx+2 , cy+i*10+20);
                     i++;
                 };
             };
@@ -113,6 +115,7 @@ var Simple_Continuous_Module = function(canvas_width, canvas_height) {
 	// ------------------
 
 	// Create the tag:
+        var canvas_id = "a";
 	var canvas_tag = "<canvas width='" + canvas_width + "' height='" + canvas_height + "' ";
 	canvas_tag += "style='border:1px dotted'></canvas>";
 	// Append it to body:

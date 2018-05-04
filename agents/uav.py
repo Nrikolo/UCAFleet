@@ -309,7 +309,7 @@ class Uav(Agent):
             print("[REFUELLING] UAV {} is at {} refuelling. " \
                   "Current content is {} liters".format(self.unique_id,
                                                         self.source_name,
-                                                        self.fuel))
+                                                        round(self.fuel,1)))
             if self.fuel < self.FUEL_CAPACITY:
                 self.fuel += Airport.find_by_name(self.source_name)[0].refuelling_rate
             else:
