@@ -6,10 +6,6 @@ Created on Fri Mar 16 15:47:22 2018
 """
 
 
-# TODO: include a flight log for each uav. Flight log would hold a list of 
-# flights conducted by uav, each with 
-# {source, destination, distance, duration, payload, fuel}
-
 # TODO: Visualization of parcels state. A pie chart where each sector indicates 
 # either {awaiting, onroute, delivered} 
     

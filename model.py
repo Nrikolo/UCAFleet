@@ -87,6 +87,12 @@ class Fleet(Model):
         '''
         return self._steps_per_hour
 
+    def get_all_airports(self):
+        '''
+        returns the models' airports (a pandas dataframe)
+        '''
+        return self._airports
+    
     def get_other_airports(self, airport):
         '''
         accessor function to get other airports than input airport
