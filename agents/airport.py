@@ -8,6 +8,7 @@ Created on Fri Mar 16 21:49:52 2018
 from collections import deque, defaultdict
 
 import numpy as np
+import logging
 
 from mesa import Agent
 
@@ -38,8 +39,8 @@ class Airport(Agent):
             refulling_rate:
             pdf:
         '''
-        print("[SPAWN] Creating an airport instance with "\
-              "id {} in {}".format(unique_id, name))
+        logging.info("[SPAWN] Creating an airport instance with "\
+                     "id {} in {}".format(unique_id, name))
         super().__init__(unique_id, model)
         self.type_ = 'airport'
         self.name = name
@@ -106,7 +107,7 @@ class Airport(Agent):
         while removing them from the uav
         '''
         
-#        print("Trying to unload {} parcels in _unload_uav stationed in {}".format(uav_obj.unique_id, 
+#       logging.info("[UNLOADING] UAV {} in _unload_uav stationed in {}".format(uav_obj.unique_id, 
 #                                                                                  self.name))
 
         shipment = uav_obj.get_parcels()
@@ -159,8 +160,8 @@ class Airport(Agent):
         and returns True if succesful and false if this uav isn't in the airport queue
         '''
         if uav_obj in self.uav_queue:
-            print("[RELEASE] {} airport is removing uav {}".format(self.name, 
-                                                         uav_obj.unique_id))
+            logging.info("[RELEASE] {} airport is removing uav {}".format(self.name, 
+                                                                         uav_obj.unique_id))
             self.uav_queue.remove(uav_obj)
             return True
         else:
@@ -188,7 +189,7 @@ class Airport(Agent):
         '''
         recieve a uav object and store it in the airport's FIFO queue 
         '''
-        print("[STORE] {} airport is queueing uav {}".format(self.name, 
+        logging.info("[STORE] {} airport is queueing uav {}".format(self.name, 
                                                      uav_obj.unique_id))
         
         self.uav_queue.append(uav_obj)
@@ -214,7 +215,7 @@ class Airport(Agent):
 #                print("Attempting to load UAV {}".format(uav_obj.unique_id))
                 #Try and load it 
                 if self._load_uav(uav_obj): 
-                    print("[LOADED] UAV {} was loaded succesfully at {} " \
+                    logging.info("[LOADED] UAV {} was loaded succesfully at {} " \
                           "with {:3d} parcels totalling {:.2f} kg ".format(uav_obj.unique_id,
                                                                     self.name,
                                                                     len(uav_obj.get_parcels()),
@@ -222,7 +223,7 @@ class Airport(Agent):
             elif (uav_obj.is_REFUELLING() and uav_obj.is_loaded()):
 #                print("Attempting to unload {}".format(uav_obj.unique_id))
                 self._unload_uav(uav_obj)
-                print("[UNLOADED] UAV {} was unloaded succesfully " \
+                logging.info("[UNLOADED] UAV {} was unloaded succesfully " \
                       "at {}".format(uav_obj.unique_id, self.name))
             elif (uav_obj.is_REFUELLING() and not uav_obj.is_loaded()):
 #                print("[REFUELLING] UAV {} is refuelling at {}".format(uav_obj.unique_id,

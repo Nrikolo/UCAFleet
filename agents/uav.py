@@ -5,11 +5,13 @@ Created on Fri Mar 16 21:33:13 2018
 @author: Riko
 """
 import numpy as np
-from flight import Flight
+import logging
+
 from collections import defaultdict
 
 from mesa import Agent
 from agents.airport import Airport
+from agents.flight import Flight
 
 class Uav(Agent):
     '''
@@ -58,7 +60,7 @@ class Uav(Agent):
             model: the model
             airport_name: where the uav is instantiated
         '''
-        print("[SPAWN] Creating a uav instance with id {} in " \
+        logging.info("[SPAWN] Creating a uav instance with id {} in " \
               "airport {}".format(unique_id, airport_obj.name))
         super().__init__(unique_id, model)
 
@@ -77,7 +79,7 @@ class Uav(Agent):
         self.num_landings = 0
         self.destination_name = None
         self.fuel = self.FUEL_CAPACITY #instantiated with full tank of gas
-        self.logger = list() # A flight log book 
+        self.flight_log_book = list() # A flight log book 
         
         Uav.name_index[self.unique_id].append(self)
 
@@ -123,7 +125,7 @@ class Uav(Agent):
         self._STATE = 'ONROUTE' # Since uav finished loading, it should be ready for takeoff
         # Remove this uav from the airport's queue
         Airport.find_by_name(self.source_name)[0].release_uav(self)
-        print("[ONROUTE] UAV {} is flying from {} to {}".format(self.unique_id,
+        logging.info("[ONROUTE] UAV {} is flying from {} to {}".format(self.unique_id,
                                                                 self.source_name,
                                                                 self.destination_name))
 #           
@@ -147,14 +149,14 @@ class Uav(Agent):
         state to refuelling
         '''
         #UAV has reached destination and landed
-        print("[ARRIVAL] UAV {} has reached {}".format(self.unique_id,
+        logging.info("[ARRIVAL] UAV {} has reached {}".format(self.unique_id,
                                                        self.destination_name))
         #change state to refuelling
         self._STATE = 'REFUELLING'
         distance = self.model.space.get_distance(Airport.find_by_name(self.source_name)[0].pos,
                                                  Airport.find_by_name(self.destination_name)[0].pos)
-        # TODO: compute the flight duration and update the logger
-        self.logger.append(Flight(self.source_name,
+        #Log this flight into the flight_log_book of this uav
+        self.flight_log_book.append(Flight(self.source_name,
                                   self.destination_name, 
                                   distance,
                                   self._flight_steps_duration / self.model.get_steps_per_hour(),
@@ -231,7 +233,6 @@ class Uav(Agent):
         '''
         self._parcels = []  # Unload parcels by clearing the list of parcels on the uav
         self._update_payload() # Update the payload mass of the uav
-        print("{} unloaded, no parcels onboard".format(self.unique_id))
 
 
     def load(self, shipment, destination, mass=None):
@@ -306,7 +307,7 @@ class Uav(Agent):
 
         if self.is_REFUELLING():
             #If uav is refuelling, continue until full
-            print("[REFUELLING] UAV {} is at {} refuelling. " \
+            logging.info("[REFUELLING] UAV {} is at {} refuelling. " \
                   "Current content is {} liters".format(self.unique_id,
                                                         self.source_name,
                                                         round(self.fuel,1)))
@@ -318,5 +319,5 @@ class Uav(Agent):
 
         if self.is_IDLE():
             #Assumes that loading takes 1 step
-            print("[IDLE] UAV {} is at {} idle.".format(self.unique_id,
+            logging.info("[IDLE] UAV {} is at {} idle.".format(self.unique_id,
                                                         self.source_name))

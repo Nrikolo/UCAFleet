@@ -16,10 +16,10 @@ from agent_portrayal import agent_portrayal
 
 from input_data import airports, steps_per_hour
 
-width = airports['x'].max() + 200.
-height = airports['y'].max() + 200.
+width = 1280 #airports['x'].max() + 200.
+height = 800 #airports['y'].max() + 200.
 
-fleet_canvas = SimpleCanvas(agent_portrayal, width, height)
+fleet_canvas = SimpleCanvas(agent_portrayal, height, width)
 
 model_params = {"airports": airports,
                 "steps_per_hour": steps_per_hour,
