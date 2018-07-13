@@ -109,8 +109,8 @@ class Airport(Agent):
         while removing them from the uav
         '''
 
-#       logging.info("[UNLOADING] UAV {} in _unload_uav stationed in {}".format(uav_obj.unique_id,
-#                                                                                  self.name))
+        logging.info("[UNLOADING] UAV {} in _unload_uav stationed in {}".format(uav_obj.unique_id,
+                                                                               self.name))
 
         shipment = uav_obj.get_parcels()
         # Set the parcels life span

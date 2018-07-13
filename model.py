@@ -27,7 +27,7 @@ Created on Fri Mar 16 15:45:46 2018
 # A Mesa implementation of an aerial delivery network.
 # Uses numpy arrays to represent vectors.
 # =============================================================================
-
+import logging
 import uuid
 import random
 
@@ -168,6 +168,7 @@ class Fleet(Model):
     def step(self):
         # Agent activation should be by this order: airports, packages, uavs
         if not bool(self.schedule.time % self.get_steps_per_hour()):
-            print("---[TIME] Simulation time is {} hours".format(self.schedule.time / self.get_steps_per_hour()))
+            logging.info("[TIME] Simulation time is {} hours".format(self.schedule.time / self.get_steps_per_hour()))
+#            print("---[TIME] Simulation time is {} hours".format(self.schedule.time / self.get_steps_per_hour()))
         self.schedule.step()
         
